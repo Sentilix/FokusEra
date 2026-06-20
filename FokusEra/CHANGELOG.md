@@ -4,37 +4,47 @@ All notable changes to the **FokusEra** addon architecture will be documented in
 
 ---
 
-## 🚀 — 2026-06-21
+## — 2026-06-21
 
-This release marks a complete structural refactor, moving from a single monolithic file prototype to a clean, multi-module standalone interface package. It guarantees full uafhængighed from foreign unit frame suites and introduces symmetrical asset tracking.
+This release introduces an advanced, zero-library Click-to-Cast Action Bar module built directly onto the primary focus layout frame architecture, combined with automated data-parsing modules.
 
-### 🏗️ Architectural Overhaul (Code Splitting)
-*   **Modular Decomposition** — Splitted the original `fokusera.lua` into 4 specialized lightweight components to optimize maintenance:
-    *   `fokusinit.lua` — Handles shared namespace setup and client boot variables.
-    *   `fokusui.lua` — Constructs all backdrops, borders, resource bars, and sizing handles.
-    *   `fokuscore.lua` — Manages the high-speed heartbeat loop and data validations.
-    *   `fokuschat.lua` — Maps UI slash commands and internal message networks.
-*   **Blizzard Namespace Security** — Implemented the secure internal table payload (`...`) to pass functions across files safely, completely eliminating raw global clutter and preventing `nil value` execution drops.
+### 🏗️ Extended Modular Clean-up
+*   **Granular File Splitting** — Expanded the file structure to 5 specialized modules to comply with strict repository boundaries and lightweight memory profiles:
+    *   `fokusspellbar.lua` — Draws the backdrop template frames and formats icon texture layouts.
+    *   `fokusspellcmd.lua` — Isolated the complex backend scanning mechanics for processing the `/fokusspell` console inputs.
+*   **Global Comment Standardization** — Purged all regional language fragments and notes across all source modules, establishing a uniform, 100% technical English documentation style inside the file architectures.
 
 ### ✨ Added Features & Symmetrical Balancing
-*   **Dual-Frame Synchronized Setup** — Introduced a dedicated, standalone **FocusTarget** window (`FokusEraTargetFrame`) attached out-of-combat to map targets of your focus player or main tank.
-*   **Target Resource Tracking** — Equipped the FocusTarget frame with an internal, responsive power/mana bar that dynamically scans and colorizes based on enemy or ally unit classifications (Mana, Rage, Energy).
-*   **Horizontal Resize Engine** — Deployed an interactive drag-grabber button in the bottom-right corner. Healers can now dynamically expand or shrink the frame layout width, while the 3D character portrait scales safely inside a locked, crisp bounding square.
-*   **Align to Grid & Magnetic Snap** — Added geometric calculation tools inside the sub-frame drag arrays. Slipped items snip automatically onto integers, and letting go of the target frame near baseline plane constraints triggers a horizontal magnetic alignment snap.
-
-### 🐛 Bug Fixes & API Safety Updates
-*   **Case-Sensitivity Cleansing** — Unified all variables, folder configurations, and directory entries to use the true, clean **K** format (`Fokus` instead of `Focus`), shielding the core package from case-sensitive C++ memory skips.
-*   **Group Dissolution Purge** — Wired a secure event handler to `GROUP_ROSTER_UPDATE`. If the player leaves a party or cross-server raid group, all `raidX` or `partyX` target hooks are instantly cleared and the frames are concealed automatically.
-*   **Modern API Transition** — Swapped out the deprecated `SetMinResize` and `SetMaxResize` Blizzard triggers for the official patch 1.15.x API wrapper `SetResizeBounds`.
-*   **Macro Pointer Correction** — Restructured action bar macro instructions to fetch unit paths natively through global frame attribute queries (`FokusEraFrame:GetAttribute("unit")`) due to structural localization inside the private addon namespace.
+*   **Secure Action Button Row** — Embedded 5 horizontal `SecureActionButtonTemplate` slots hovering 14 pixels above the primary health bar profile for safe, latency-free in-combat spell execution.
+*   **Intelligent Auto-Vacancy Scanner** — Upgraded `/fokusspell` console command logic. Typing `/fokusspell [Spell Name]` without an integer slot mapping automatically scans arrays from index 1 to 5 to claim the first vacant cell.
+*   **Strict Spell Validation Engine** — Integrated real-time client verification. Entering an invalid or misspelled spell string forces an instant operation block and prints a clear warning feedback line without altering saved character variables.
+*   **Numeric Database Fallback** — Programmed the database layer to automatically look up and store raw numeric `SpellID` keys instead of volatile string text, bypassing localized graphic loading glitches.
+*   **Slate-Dark Silhouette Outlines** — Redesigned icon boundaries to use a solid black (1-pixel) backdrop frame layer, blending action triggers natively with the standalone backdrop panels.
+*   **Unified Layout Reset** — Bound action slot allocations to the central system flush. Executing `/fokusreset` now purges active spell registries (`FokusEra_Spells = {}`) alongside screen coordinates.
 
 ---
 
-## 🧪 — 2026-06-20
+## — 2026-06-20
 
 ### Added
-*   Initial fully functional monolithic single-file prototype build (`fokusera.lua`).
+*   Complete core codebase refactor moving from a monolithic build to an isolated multi-file framework (`init`, `ui`, `core`, `chat`).
+*   Blizzard internal table namespace injection (`...`) passing parameters safely across modules to stop file-clashing.
+*   Dedicated, synchronized **FocusTarget** window tracking units targeted by your active focus player.
+*   Horizontal dragging frame resizing grabber allowing customized width stretch values.
+*   "Align to Grid" mathematical pixel rounding mechanics paired with a magnetic vertical snap utility.
+
+### Fixed
+*   Case-sensitivity bugs, stripping out all volatile `C`-references to fully secure the clean **K** architecture (`FokusFrame`).
+*   Automatic memory de-allocation routing loops on character group dissolution events.
+*   Transitioned layout configurations to use the modern Classic Era API function wrapper `SetResizeBounds`.
+
+---
+
+## — 2026-06-06
+
+### Added
+*   Initial functional monolithic single-file prototype build (`fokusera.lua`).
 *   Core background heartbeat update loop scanning units 10 times a second.
-*   Basic 3D character portrait window matching Z-Perl Slate-Dark solid backing aesthetics.
+*   Basic 3D character portrait window matching slate-dark solid backing aesthetics.
 *   Clique click-cast bridging and basic slash triggers (`/fokus`, `/clearfokus`, `/fokusreset`).
 *   Character-locked WTF configuration variables for basic padlock positioning retention.
