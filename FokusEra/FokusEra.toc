@@ -1,0 +1,11 @@
+## Interface: 11508
+## Title: Z-Perl Focus Era Bridge
+## Notes: Create a focus frame for party / raid members in Classic Era.
+## Author: Mimma @ EU-Pyrewood Village
+## Version: 1.0.0
+## SavedVariablesPerCharacter: FocusEra_SavedLockState
+## OptionalDeps: ZPerl, ZPerl_Target, ZPerl_RaidFrames
+## DefaultState: enabled
+
+fokusera.lua
+

@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# WowAddOnStudio Solution File, Format Version 11.00
+VisualStudioVersion = 17.10.35827.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E6E1D386-69D8-4755-9E61-0950293915FC}") = "FokusEra", "FokusEra\FokusEra.wowproj", "{D034D948-1EDA-4D03-BF3B-C9C34B618CBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Default|Any CPU = Default|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D034D948-1EDA-4D03-BF3B-C9C34B618CBB}.Default|Any CPU.ActiveCfg = Default|Any CPU
+		{D034D948-1EDA-4D03-BF3B-C9C34B618CBB}.Default|Any CPU.Build.0 = Default|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2F6D7389-8D87-45A5-AA81-A06F4058CA91}
+	EndGlobalSection
+EndGlobal
