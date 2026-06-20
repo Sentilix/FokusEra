@@ -1,67 +1,73 @@
-# FokusEra (Z-Perl Focus Bridge)
-### User Documentation & Guide — Version 1.0.0
+# 🔮 FokusEra
 
-**FokusEra** is a lightweight, high-performance, and combat-safe addon designed specifically for **World of Warcraft Classic Era (Patch 1.15.8)**. It bridges the structural gap of the missing native `/focus` engine by simulating a fully functional, highly responsive Focus Frame that matches the classic **Z-Perl / X-Perl** visual aesthetic. 
+A lightweight, high-performance, and completely standalone focus frame structure built exclusively for **World of Warcraft: Classic Era (Patch 1.15.x)**. 
 
-Engineered explicitly for group and raid environments, FokusEra integrates seamlessly with click-casting layouts like **Clique** and your custom healing or dispelling macros without causing UI errors or frame taints during intense encounters.
-
----
-
-## ⚡ Key Features
-
-*   **Z-Perl Visual Aesthetic:** Features the iconic rectangular dark-gradient layout, complete with fluidly updating values for Health and Power bars.
-*   **Authentic Color Profile:** Health bars stay fixed in classic Z-Perl dark green, while player names are dynamically colored to match their respective class (e.g., White for Priest, Light Blue for Mage).
-*   **3D Character Portrait:** Automatically renders a real-time 3D model of your focus target.
-*   **Smart Group Re-shuffling:** Tracks your focus target dynamically via their distinct `UnitGUID`. If raid assists or group leaders move your focus target across different groups mid-encounter, FokusEra seamlessly maps them across `raid1-40` or `party1-4` tokens without losing track.
-*   **Clique & Macro Native Compatibility:** Acts as a secure unit button wrapper. Your custom Clique configurations (including complex `Shift` and `Ctrl` modifiers) and click-to-cast configurations map flawlessly onto the frame.
-*   **Character-Specific Layout Profile:** Features an interactive control panel directly on the frame. Locking the frame color-codes the control anchor and permanently retains the frame coordinates locally per character.
-*   **Raid-Wide Version Checker:** Built-in hidden addon communication channel allowing network telegrams to audit configurations and version synchronization across an entire raid team without echoing your own interface.
-*   **Dynamic Metadata Syncing:** The addon automatically extracts its active version string directly from the `.toc` file, making updates seamless.
+FokusEra operates entirely on its own visual engine, providing a clean, slate-dark aesthetic without bulky interface overhauls. It bridges the game's background metrics with keyboard action bar macros and provides a dedicated, layout-synchronized **FocusTarget** frame featuring realtime health and power resource scanning.
 
 ---
 
-## 🛠️ Chat Commands & Hotkeys
+## ✨ Features
 
-FokusEra uses a localized, uniform prefix structure to ensure all commands are easy to remember and completely isolated from protected engine keywords.
-
-### Core Console Commands
-*   **`/fokus`** — Sets the target frame to your currently selected friendly player (or yourself). Must be used out of combat.
-*   **`/clearfokus`** — Completely drops the tracked unit, purges secure attributes, and cleanly hides the UI shell.
-*   **`/fokusreset`** — Instantly centers the frame onto the lower-third boundary of your screen. If no focus is active, it spawns a temporary "Sandbox Test Profile" with your own 3D portrait so you can easily view and adjust the new placement.
-*   **`/fokusversion`** — Broadcasts an unsecure data network telegram to your entire party or raid group. It prints your current installation locally and loops responses from any raid member running FokusEra.
-*   **`/fokushelp`** — Prints a clean, color-coordinated in-game command and shortcut overview directly into your local chat frame.
-
-### Mouse Shortcuts
-*   **`Alt + Left-Click + Drag`** — Allows free-hand dragging and positioning of the frame anywhere across your user interface (only functional when the lock toggle is set to Open/Yellow and you are out of combat).
+*   **100% Standalone Integrity** — Operates natively using the Blizzard API without any reliance on or hooks into external unit frame addons.
+*   **Dual-Frame Setup** — Includes a primary tracking focus window (with a 3D portrait, level display, class color strings, and health/power tracking) alongside a symmetrical **FocusTarget** tracker for targets of your focus.
+*   **Clique & Click-Cast Friendly** — Both the Focus Frame and FocusTarget Frame are built onto `SecureUnitButtonTemplate` architectures, allowing out-of-combat configuration and full direct binding support via mouseover heal engines like Clique.
+*   **Smart Token Routing Loop** — Monitors group re-shuffles and raid grid position re-allocations dynamically in the background 10 times a second, preventing the layout from losing tracking data mid-combat.
+*   **Independent Alt + Drag Layouts** — Hold `Alt` and drag either frame to construct your ideal viewport configuration. 
+*   **Align to Grid & Magnetic Snap** — Slipped sub-frames mathematically round to clean pixel points. Dropping the target frame near horizontal alignment forces an instant magnetic snap onto a perfectly level plane.
+*   **Horizontal Stretch Tuning** — Drag the built-in sizing handle in the bottom-right corner to stretch the main frame width dynamically while keeping the 3D portrait size crisp and intact.
+*   **Persistent WTF Config File Mapping** — Remembers lock states, layout positions, custom coordinate gaps, and expanded widths across relogs uniquely per character.
 
 ---
 
-## 🎛️ Interactive Frame Controls
+## ⌨️ Slash Commands Overview
 
-Two distinct miniature visual anchors reside at the top-right corner of the FocusFrame, allowing manual control without console entry:
+Execute these key strings inside your in-game text frame input:
 
-1.  **The Gold/Red Gear Wheel (Tandhjul):** Controls layout configuration locks.
-    *   🟡 **Gold/Yellow:** The frame is **Unlocked**. You can hold `Alt` and drag the frame to a new position.
-    *   🔴 **Red:** The frame is **Locked**. It is completely anchored to its positions to prevent accidental dragging during chaotic raid movement. *This state is automatically saved across logouts and interface reloads.*
-2.  **The Red 'X' Button (Clear Button):** Acts as a hardware trigger for `/clearfokus`. Clicking this immediately purges the active target and conceals the frame interface.
+*   `/fokus` — Assigns your currently active friendly target pointer to the framework (Usable out of combat).
+*   `/clearfokus` — De-allocates tracking targets, completely conceals active frame structures, and purges system memory keys.
+*   `/fokusreset` — Safely flushes runtime coordinates and database entries, snapping both frames back to default lower-third grid spaces side by side.
+*   `/fokusversion` — Audits active raid or party communication channels for checking matching FokusEra client installations.
+*   `/fokushelp` — Prints a layout command cheat sheet checklist index directly into your local log pane.
 
 ---
 
 ## 📋 Comprehensive Macro Integration
 
-Because FokusEra internally keeps your target up-to-date within a secure framework, you can write powerful companion macros for your keyboard action bars using the matching **`FokusEra_`** namespace.
+Because FokusEra internally keeps your target updated within a secure framework, you can write powerful companion macros for your keyboard action bars by querying the global frame attributes directly.
 
-### 1. Smart "Alive & In Range" Emergency Casting
-Perfect for casting heavy heals (*Flash Heal*, *Holy Light*) or instant purges (*Cleanse*, *Dispel Magic*) directly onto your focus without abandoning your current enemy or boss target. This macro uses `UnitInRange` to run a 40-yard validation check and filters out deceased party members:
-
-```macro
-/run local t=FokusEra_CurrentToken; if t and UnitExists(t) and not UnitIsDeadOrGhost(t) and UnitInRange(t) then CastSpellByName("Flash Heal", t) else UIErrorsFrame:AddMessage("Focus Dead or Out of Range!", 1, 0, 0) PlaySound(846) end
-```
-*Note: Replace `"Flash Heal"` with your specific class spell name exactly as it appears in your spellbook.*
-
-### 2. Snap-Targeting Utility
-If you need to rapidly cycle your primary target pointer onto your focus unit regardless of team sizing configurations, copy this short string:
+### 1. Silent "In-Range Check" Cast Engine (With Icon Tooltip)
+This companion macro handles range validation metrics silently and tracks cooldown graphics without throwing annoying error texts on your viewport if your focus is out of line-of-sight:
 
 ```macro
-/run local t=FokusEra_CurrentToken; if t and UnitExists(t) then TargetUnit(t) end
+#showtooltip Power Word: Shield
+/run local t=FokusEraFrame:GetAttribute("unit"); if t and UnitExists(t) and not UnitIsDeadOrGhost(t) and UnitInRange(t) then CastSpellByName("Power Word: Shield", t); end
 ```
+
+### 2. Snap-Targeting Pointer Swap
+Cycle your main target selection window instantly onto your designated focus player or tank unit regardless of configuration sizing:
+
+```macro
+/run local t=FokusEraFrame:GetAttribute("unit"); if t and UnitExists(t) then TargetUnit(t) end
+```
+
+---
+
+## 💽 File Structure Registry
+
+For clean client initialization, your core folder directory path must be named exactly **`fokusera`** inside `World of Warcraft\_classic_era_\Interface\AddOns\`. Ensure your active package includes only the following modules:
+
+1.  **`README.md`** — This structural documentation sheet.
+2.  **`fokusera.toc`** — The initialization list that loads variables and modules in sequence.
+3.  **`fokusinit.lua`** — Initializes shared namespaces and handles system startup variables.
+4.  **`fokusui.lua`** — Establishes secure button canvas structures, fonts, backdrops, and resize motors.
+5.  **`fokuscore.lua`** drove the background heartbeat tracking loop, group roster checks, and unit power type updates.
+6.  **`fokuschat.lua`** — Binds command keywords and logs data broadcasts on background channels.
+
+---
+
+## 🚀 Post-Installation Verification Checklist
+
+1. Ensure **Clique** is updated to map onto external addons if you want click-casting.
+2. Boot into the server environment. Type **`/fokusreset`** to force the layout sandboxes onto your screen.
+3. Unlock the yellow wheel icon, adjust your sizing stretch widths, and clamp the padlock down red (Locked) to save profiles safely! (Your system chat frame will confirm authorization with the active version string: **
+3. 

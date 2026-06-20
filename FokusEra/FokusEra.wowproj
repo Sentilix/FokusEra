@@ -3,19 +3,29 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Default</Configuration>
     <Name>FokusEra</Name>
     <ProjectGuid>d034d948-1eda-4d03-bf3b-c9c34b618cbb</ProjectGuid>
-    <AssemblyName>FocusEra</AssemblyName>
-    <RootNamespace>FocusEra</RootNamespace>
+    <AssemblyName>FokusEra</AssemblyName>
+    <RootNamespace>FokusEra</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Default' ">
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="fokusera.lua">
+    <Content Include="fokuschat.lua">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="FokusEra.toc">
+    <Content Include="fokuscore.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="fokusera.toc">
       <SubType>TableOfContents</SubType>
     </Content>
+    <Content Include="fokusinit.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="fokusui.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="README.md" />
   </ItemGroup>
   <Import Project="$(DevEnvDir)\Extensions\Tools\MSBuild\AddonStudio\Wow\3.0\WowAddonStudio.targets" />
   <!--
