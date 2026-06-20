@@ -1,14 +1,14 @@
 -- Catch the shared addon namespace parameter from the WoW engine
 local addonName, FokusEraNS = ...
 
--- Global frame names unified with the K format (FIXED: Absolutely no 'local' keywords!)
+-- Global frame names unified with the K format
 FokusEraFrame = CreateFrame("Button", "FokusEraFrame", UIParent, "SecureUnitButtonTemplate, BackdropTemplate")
 FokusFrame = FokusEraFrame
 
 FokusEraTargetFrame = CreateFrame("Button", "FokusEraTargetFrame", FokusFrame, "SecureUnitButtonTemplate, BackdropTemplate")
 FokusTargetFrame = FokusEraTargetFrame
 
--- MAIN FRAME DESIGN (FokusFrame - Højde: 48)
+-- MAIN FRAME DESIGN (FokusFrame - Height: 48)
 FokusFrame:SetSize(210, 48)
 FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
 FokusFrame:SetMovable(true)
@@ -51,7 +51,7 @@ FokusFrame:SetScript("OnDragStop", function(self)
     ReanchorTargetFrame()
 end)
 
--- FOCUS TARGET FRAME DESIGN (Højde: 48)
+-- FOCUS TARGET FRAME DESIGN (Height: 48 - Symmetrical boundary shell)
 FokusTargetFrame:SetSize(130, 48)
 FokusTargetFrame:SetMovable(true) 
 FokusTargetFrame:EnableMouse(true)
@@ -84,6 +84,7 @@ FokusTargetFrame:SetScript("OnDragStop", function(self)
         local rawX = math.floor(targetX - mainX - (currentMainWidth / 2) - (130 / 2))
         local rawY = math.floor(targetY - mainY)
         
+        -- MAGNETIC SNAP: Forced snap mapping onto identical plane parameters
         if math.abs(rawY - (0)) <= 10 then rawY = 0 end 
         
         FokusEra_OffsetX = rawX

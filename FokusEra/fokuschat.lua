@@ -48,7 +48,10 @@ SlashCmdList["FOKUS"] = function(msg)
         end
     end
 
-    if foundToken then FokusEraNS.FokusEra_SetGroupFocus(foundToken) end
+    if foundToken then 
+        FokusEraNS.FokusEra_SetGroupFocus(foundToken) 
+        if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
+    end
 end
 
 -- 2. CONSOLE SYSTEM COMMAND: /clearfokus
@@ -56,6 +59,7 @@ SLASH_CLEARFOKUS1 = "/clearfokus"
 SlashCmdList["CLEARFOKUS"] = function(msg)
     if InCombatLockdown() then return end
     FokusEraNS.FokusEra_ClearGroupFocusLogic()
+    if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
 end
 
 -- 3. CONSOLE SYSTEM COMMAND: /fokusversion
@@ -82,19 +86,21 @@ SlashCmdList["FOKUSRESET"] = function(msg)
     end
     
     if FokusFrame and FokusTargetFrame then
-        -- Nulstil Hovedrammen på skærmen
         FokusFrame:ClearAllPoints()
         FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150) 
         
-        -- FIX: Vi nulstiller de relative database-afstande til standard Z-Perl værdier!
         FokusEra_OffsetX = 4
-        FokusEra_OffsetY = -7
+        FokusEra_OffsetY = 0
+        FokusEra_Width = 210
+        FokusEra_Spells = {} 
         
-        -- Tving målrammen tilbage på sin faste plads relativt til hovedrammen
         FokusTargetFrame:ClearAllPoints()
         FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
         
-        print("|cff00ff00[FokusEra]|r Interface layout coordinates and offsets successfully reset to default parameters.")
+        FokusFrame:SetWidth(FokusEra_Width)
+        if FokusEra_UpdateInternalWidths then FokusEra_UpdateInternalWidths() end
+        
+        print("|cff00ff00[FokusEra]|r Interface layout coordinates, widths, and action spell slots successfully reset.")
         
         if not FokusEraNS.FokusEra_CT then
             print("|cffffaa00[FokusEra]|r Temporarily rendering sandbox test layout. Type /clearfokus to conceal.")
@@ -111,6 +117,7 @@ SlashCmdList["FOKUSRESET"] = function(msg)
             FokusEraTargetFrame.hpBar:SetMinMaxValues(0, 100); FokusEraTargetFrame.hpBar:SetValue(75) 
             FokusEraTargetFrame:Show()
         end
+        if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
     end
 end
 
@@ -119,6 +126,7 @@ local function DisplayInGameHelp()
     print("|cff00ff00------------------ [FokusEra Help] ------------------|r")
     print("|cffffaa00/fokus|r - Sets your currently selected friendly group target to the focus framework (Out of combat).")
     print("|cffffaa00/clearfokus|r - Clears your tracked focus target and completely conceals the frame template.")
+    print("|cffffaa00/fokusspell [Spell Name]|r - Binds an icon automatically to the next free slot (Or use /fokusspell [1-5] [Name]).")
     print("|cffffaa00/fokusreset|r - Resets frame layout screen coordinates safely back to the default bottom-third position.")
     print("|cffffaa00/fokusversion|r - Audits your active party or raid network for current FokusEra installation versions.")
     print("|cffffaa00/fokushelp|r - Prints this console command checklist overview directly onto your local chat frame.")

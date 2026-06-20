@@ -6,6 +6,7 @@ FokusFrame.timeSinceLastUpdate = 0
 FokusFrame.lastRenderedGUID = nil
 
 FokusFrame:SetScript("OnUpdate", function(self, elapsed)
+    -- Exit routine if no active focus token data is registered inside the shared namespace
     if not FokusEraNS.FokusEra_CT then 
         self:Hide()
         FokusEraTargetFrame:Hide()
@@ -40,6 +41,7 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
 
         if not UnitExists(token) then return end
 
+        -- Force active bar frames to preserve stretched dimensions across loop updates
         if FokusEra_UpdateInternalWidths then FokusEra_UpdateInternalWidths() end
 
         -- 1. RE-RENDER MAIN FOCUS METRICS
@@ -62,9 +64,9 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
         local maxPower = UnitPowerMax(token, powerType)
         self.manaBar:SetMinMaxValues(0, maxPower); self.manaBar:SetValue(currentPower)
 
-        if powerType == 0 then self.manaBar:SetStatusBarColor(0, 0.4, 1)
-        elseif powerType == 1 then self.manaBar:SetStatusBarColor(1, 0, 0)
-        elseif powerType == 3 then self.manaBar:SetStatusBarColor(1, 1, 0)
+        if powerType == 0 then self.manaBar:SetStatusBarColor(0, 0.4, 1) -- Blue Mana
+        elseif powerType == 1 then self.manaBar:SetStatusBarColor(1, 0, 0) -- Red Rage
+        elseif powerType == 3 then self.manaBar:SetStatusBarColor(1, 1, 0) -- Yellow Energy
         else self.manaBar:SetStatusBarColor(0, 0.8, 0.8) end
 
         if self.portrait then
@@ -74,7 +76,7 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             end
         end
 
-        -- 2. RE-RENDER FOCUS TARGET METRICS (Now with unified power bar loop!)
+        -- 2. RE-RENDER FOCUS TARGET METRICS (Now with unified power bar loop)
         local targetToken = token .. "target"
         
         if UnitExists(targetToken) then
@@ -94,7 +96,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                 FokusEraTargetFrame.nameText:SetTextColor(1, 0.82, 0) 
             end
             
-            -- NY: DYNAMISK POWER BAR UPDATES TIL TARGET-RAMMEN
             local tPowerType = UnitPowerType(targetToken)
             local tCurrentPower = UnitPower(targetToken, tPowerType)
             local tMaxPower = UnitPowerMax(targetToken, tPowerType)
@@ -116,7 +117,7 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
     end
 end)
 
--- CORE DATA ASSIGNMENT (Shared into Namespace)
+-- CORE DATA ASSIGNMENT (Shared into Namespace array table)
 function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
     if InCombatLockdown() then return end
     if unitToken and FokusFrame then
@@ -136,7 +137,7 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
     end
 end
 
--- DATA DE-ALLOCATION MANAGEMENT ROUTINE (Shared into Namespace)
+-- DATA DE-ALLOCATION MANAGEMENT ROUTINE (Shared into Namespace array table)
 function FokusEraNS.FokusEra_ClearGroupFocusLogic()
     FokusEraNS.FokusEra_CT = nil; FokusEraNS.FokusEra_CurrentGUID = nil; FokusEraNS.FokusEra_CurrentName = nil
     if FokusFrame then

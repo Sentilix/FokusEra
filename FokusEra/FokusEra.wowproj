@@ -10,6 +10,7 @@
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="CHANGELOG.md" />
     <Content Include="fokuschat.lua">
       <SubType>Code</SubType>
     </Content>
@@ -20,6 +21,12 @@
       <SubType>TableOfContents</SubType>
     </Content>
     <Content Include="fokusinit.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="fokusspellbar.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="fokusspellcmd.lua">
       <SubType>Code</SubType>
     </Content>
     <Content Include="fokusui.lua">
