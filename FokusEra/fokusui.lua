@@ -24,8 +24,17 @@ FokusFrame:SetBackdrop({
 FokusFrame:SetBackdropColor(0, 0, 0, 0.85)
 FokusFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 
+-- FUNCTION: Dynamically anchors the target frame relative to the main frame
+function ReanchorTargetFrame()
+    FokusTargetFrame:ClearAllPoints()
+    FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
+end
+
 -- FUNCTION: Updates the width of the status bars inside the frame based on current frame width
 function FokusEra_UpdateInternalWidths()
+    -- FIX v1.2.3: ABSOLUTE COMBAT BLOCK! Prevents Blizzard from throwing ADDON_ACTION_BLOCKED errors in combat lockdown!
+    if InCombatLockdown() then return end
+    
     local newWidth = FokusFrame:GetWidth()
     local barWidth = newWidth - 62 
     FokusFrame.hpBar:SetWidth(barWidth)
@@ -39,7 +48,7 @@ FokusFrame:SetScript("OnDragStart", function(self)
 end)
 FokusFrame:SetScript("OnDragStop", function(self) 
     self:StopMovingOrSizing()
-    if ReanchorTargetFrame then ReanchorTargetFrame() end
+    ReanchorTargetFrame()
 end)
 
 -- Portrait sub-frames configuration
@@ -51,13 +60,6 @@ FokusFrame.portrait:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 6, -5)
 local portBG = FokusFrame:CreateTexture(nil, "BACKGROUND")
 portBG:SetAllPoints(FokusFrame.portrait)
 portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
-
--- NEW: Raid Target Icon Texture (Placed on top-left corner of the main portrait)
-FokusFrame.raidIcon = FokusFrame.staticPortrait:CreateTexture(nil, "OVERLAY")
-FokusFrame.raidIcon:SetSize(16, 16)
-FokusFrame.raidIcon:SetPoint("TOPLEFT", FokusFrame.portrait, "TOPLEFT", -2, 2)
-FokusFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
-FokusFrame.raidIcon:Hide()
 
 -- Text strings layout geometry
 FokusFrame.nameText = FokusFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

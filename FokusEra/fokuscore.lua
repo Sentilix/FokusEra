@@ -75,18 +75,13 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             end
         end
 
-        -- NEW: DYNAMIC RAID TARGET ICON SCANNER FOR MAIN FOCUS
-        local raidIndex = GetRaidTargetIndex(token)
-        if raidIndex and raidIndex >= 1 and raidIndex <= 8 then
-            -- Mathematical coordinates to cut out the specific icon from Blizzard's 4x2 texture grid grid
-            local left = mod(raidIndex - 1, 4) * 0.25
-            local right = left + 0.25
-            local top = floor((raidIndex - 1) / 4) * 0.25
-            local bottom = top + 0.25
-            self.raidIcon:SetTexCoord(left, right, top, bottom)
-            self.raidIcon:Show()
-        else
-            self.raidIcon:Hide()
+        -- Call isolated engine modules to update raid markings and border colors for Main Focus
+        if FokusEra_UpdateRaidTargetIcon then FokusEra_UpdateRaidTargetIcon(token, self.raidIcon) end
+        
+        -- EXCLUSIVE SCAN: Updates the primary focus frame boundary color dynamically based on priorities
+        if FokusEra_ScanUnitDebuffsAndGetBorderColor then
+            local mainR, mainG, mainB = FokusEra_ScanUnitDebuffsAndGetBorderColor(token)
+            self:SetBackdropBorderColor(mainR, mainG, mainB, 1)
         end
 
         -- 2. RE-RENDER FOCUS TARGET METRICS
@@ -118,7 +113,7 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             if tPowerType == 0 then FokusEraTargetFrame.manaBar:SetStatusBarColor(0, 0.4, 1) 
             elseif tPowerType == 1 then FokusEraTargetFrame.manaBar:SetStatusBarColor(1, 0, 0) 
             elseif tPowerType == 3 then FokusEraTargetFrame.manaBar:SetStatusBarColor(1, 1, 0) 
-            else FokusEraTargetFrame.manaBar:SetStatusBarColor(0, 0.8, 0.8) end
+            else FokusTargetFrame.manaBar:SetStatusBarColor(0, 0.8, 0.8) end
             
             if FokusEraTargetFrame.portrait then
                 FokusEraTargetFrame.portrait:Show()
@@ -136,18 +131,11 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                 end
             end
 
-            -- NEW: DYNAMIC RAID TARGET ICON SCANNER FOR FOCUS TARGET
-            local tRaidIndex = GetRaidTargetIndex(targetToken)
-            if tRaidIndex and tRaidIndex >= 1 and tRaidIndex <= 8 then
-                local left = mod(tRaidIndex - 1, 4) * 0.25
-                local right = left + 0.25
-                local top = floor((tRaidIndex - 1) / 4) * 0.25
-                local bottom = top + 0.25
-                FokusEraTargetFrame.raidIcon:SetTexCoord(left, right, top, bottom)
-                FokusEraTargetFrame.raidIcon:Show()
-            else
-                FokusEraTargetFrame.raidIcon:Hide()
-            end
+            -- Update sub-target raid markings via isolated engine module
+            if FokusEra_UpdateRaidTargetIcon then FokusEra_UpdateRaidTargetIcon(targetToken, FokusEraTargetFrame.raidIcon) end
+            
+            -- SILENT LOCK: Target frame border remains entirely dark gray to avoid healer distraction
+            FokusEraTargetFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
             
             FokusEraTargetFrame:Show()
         else
