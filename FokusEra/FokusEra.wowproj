@@ -29,6 +29,9 @@
     <Content Include="fokusspellcmd.lua">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="fokustargetui.lua">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="fokusui.lua">
       <SubType>Code</SubType>
     </Content>

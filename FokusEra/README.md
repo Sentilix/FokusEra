@@ -63,11 +63,12 @@ For clean client initialization, your core folder directory path must be named e
 2.  **`CHANGELOG.md`** — Comprehensive release and update changelog history tracking ledger.
 3.  **`fokusera.toc`** — The initialization list that loads variables and modules in sequence.
 4.  **`fokusinit.lua`** — Initializes shared namespaces and handles system startup variables.
-5.  **`fokusui.lua`** — Establishes secure button canvas structures, fonts, backdrops, and resize motors.
-6.  **`fokusspellbar.lua`** — Manages the 5 horizontal Click-to-Cast action button frames and kulsort spell icons.
-7.  **`fokuscore.lua`** — Drives the background heartbeat tracking loop, group roster checks, and unit power type updates.
-8.  **`fokuschat.lua`** — Binds system commands (`/fokus`, `/fokusreset`, `/fokushelp`) and logs version pings.
-9.  **`fokusspellcmd.lua`** — Manages data-parsing and spell database scanning triggers for the `/fokusspell` syntax.
+5.  **`fokusui.lua`** — Establishes secure button canvas structures, fonts, backdrops, and resize motors for the main frame.
+6.  **`fokustargetui.lua`** — Constructs the mirrored target frame, right-anchored 3D portrait, and magnet-snap alignments.
+7.  **`fokusspellbar.lua`** — Manages the 5 horizontal Click-to-Cast action button frames and kulsort spell icons.
+8.  **`fokuscore.lua`** — Drives the background heartbeat tracking loop, group roster checks, and unit power type updates.
+9.  **`fokuschat.lua`** — Binds system commands (`/fokus`, `/fokusreset`, `/fokushelp`) and logs version pings.
+10. **`fokusspellcmd.lua`** — Manages data-parsing and spell database scanning triggers for the `/fokusspell` syntax.
 
 ---
 
