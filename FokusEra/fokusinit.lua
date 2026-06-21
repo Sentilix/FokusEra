@@ -11,7 +11,7 @@ if FokusEraNS.FokusEra_IsLocked == nil then FokusEraNS.FokusEra_IsLocked = false
 -- Addon configuration references
 -- Addon configuration references
 local addonFolderName = "fokusera"
-local addonVersion = C_AddOns.GetAddOnMetadata(addonFolderName, "Version") or "1.2.2"
+local addonVersion = C_AddOns.GetAddOnMetadata(addonFolderName, "Version") or "1.2.3"
 
 -- Dynamically compiled Title string
 FokusEra_Version = "FokusEra " .. addonVersion

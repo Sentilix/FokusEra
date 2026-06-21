@@ -78,7 +78,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
         -- Call isolated engine modules to update raid markings and border colors for Main Focus
         if FokusEra_UpdateRaidTargetIcon then FokusEra_UpdateRaidTargetIcon(token, self.raidIcon) end
         
-        -- EXCLUSIVE SCAN: Updates the primary focus frame boundary color dynamically based on priorities
         if FokusEra_ScanUnitDebuffsAndGetBorderColor then
             local mainR, mainG, mainB = FokusEra_ScanUnitDebuffsAndGetBorderColor(token)
             self:SetBackdropBorderColor(mainR, mainG, mainB, 1)
@@ -131,10 +130,8 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                 end
             end
 
-            -- Update sub-target raid markings via isolated engine module
             if FokusEra_UpdateRaidTargetIcon then FokusEra_UpdateRaidTargetIcon(targetToken, FokusEraTargetFrame.raidIcon) end
             
-            -- SILENT LOCK: Target frame border remains entirely dark gray to avoid healer distraction
             FokusEraTargetFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
             
             FokusEraTargetFrame:Show()
@@ -156,11 +153,17 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
         FokusEraNS.FokusEra_CurrentName = UnitName(unitToken)
         print("|cff00ff00[FokusEra]|r Focus target set to: " .. FokusEraNS.FokusEra_CurrentName)
         
+        -- FIX: Assign the raw unit string metadata straight onto the frame engine properties!
+        -- This alerts external aura engines to parse the core target's buffs instead of falling back to default viewports.
+        FokusFrame.unit = unitToken
         FokusFrame:SetAttribute("unit", unitToken)
         FokusFrame:SetAttribute("*unit", unitToken)
         
-        FokusEraTargetFrame:SetAttribute("unit", unitToken .. "target")
-        FokusEraTargetFrame:SetAttribute("*unit", unitToken .. "target")
+        if FokusTargetFrame then
+            FokusTargetFrame.unit = unitToken .. "target"
+            FokusTargetFrame:SetAttribute("unit", unitToken .. "target")
+            FokusTargetFrame:SetAttribute("*unit", unitToken .. "target")
+        end
         
         FokusFrame.lastRenderedGUID = nil
         FokusTargetFrame.lastRenderedTargetGUID = nil 
@@ -172,8 +175,14 @@ end
 function FokusEraNS.FokusEra_ClearGroupFocusLogic()
     FokusEraNS.FokusEra_CT = nil; FokusEraNS.FokusEra_CurrentGUID = nil; FokusEraNS.FokusEra_CurrentName = nil
     if FokusFrame then
+        FokusFrame.unit = nil
         FokusFrame:SetAttribute("unit", nil); FokusFrame:SetAttribute("*unit", nil)
-        FokusEraTargetFrame:SetAttribute("unit", nil); FokusEraTargetFrame:SetAttribute("*unit", nil)
+        
+        if FokusTargetFrame then
+            FokusTargetFrame.unit = nil
+            FokusTargetFrame:SetAttribute("unit", nil); FokusTargetFrame:SetAttribute("*unit", nil)
+        end
+        
         FokusFrame.lastRenderedGUID = nil; FokusTargetFrame.lastRenderedTargetGUID = nil
         FokusFrame:Hide(); FokusEraTargetFrame:Hide()
     end

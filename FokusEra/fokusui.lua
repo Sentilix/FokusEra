@@ -24,15 +24,8 @@ FokusFrame:SetBackdrop({
 FokusFrame:SetBackdropColor(0, 0, 0, 0.85)
 FokusFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 
--- FUNCTION: Dynamically anchors the target frame relative to the main frame
-function ReanchorTargetFrame()
-    FokusTargetFrame:ClearAllPoints()
-    FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
-end
-
 -- FUNCTION: Updates the width of the status bars inside the frame based on current frame width
 function FokusEra_UpdateInternalWidths()
-    -- FIX v1.2.3: ABSOLUTE COMBAT BLOCK! Prevents Blizzard from throwing ADDON_ACTION_BLOCKED errors in combat lockdown!
     if InCombatLockdown() then return end
     
     local newWidth = FokusFrame:GetWidth()
@@ -48,7 +41,7 @@ FokusFrame:SetScript("OnDragStart", function(self)
 end)
 FokusFrame:SetScript("OnDragStop", function(self) 
     self:StopMovingOrSizing()
-    ReanchorTargetFrame()
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
 
 -- Portrait sub-frames configuration

@@ -4,9 +4,18 @@ All notable changes to the **FokusEra** addon architecture will be documented in
 
 ---
 
+## — 2026-06-21 (version 1.2.3)
+
+This patch release resolves external unit aura synchronization anomalies, preventing ghostly target buff projections from leaking onto custom secure frame layouts.
+
+### 🐛 Fixed
+*   **Aura Token Linkage** — Wired direct Blizzard metadata registration handlers (`FokusFrame.unit = unitToken` and `FokusTargetFrame.unit = unitToken .. "target"`) inside the core data allocation loops in `fokuscore.lua`. This explicitly alerts external aura frameworks and dependency engines to monitor and render the focus unit's native buff signatures instead of erroneously falling back onto the standard active player target viewport.
+
+---
+
 ## — 2026-06-21 (version 1.2.2)
 
-This release implements advanced tactical raid overlays, an intelligent class-specific debuff prioritization border engine, and comprehensive in-combat error shielding.
+This release implements tactical raid target marking overlays, an intelligent class-specific debuff prioritization border engine, and comprehensive in-combat graphics protection.
 
 ### ✨ Added
 *   **Smart Debuff Border Highlights** — Frame backdrops dynamically colorize their borders based on the highest weighted threat (Magic = Blue, Curse = Purple, Disease = Brown, Poison = Green) utilizing the new `fokusdispel.lua` engine module.
@@ -27,7 +36,7 @@ This release establishes visual layout symmetry with dual 3D model capabilities 
 ### ✨ Added
 *   **Mirrored 3D Target Portrait** — Upgraded `FokusEraTargetFrame` with an internal 3D `PlayerModel` viewport mirrored symmetrically to the right-hand margin using the isolated `fokustargetui.lua` module.
 *   **OnModelLoaded Camera Anchor** — Fixed 3D camera drift by introducing an automated model load event listener, enforcing a high-precision close-up face zoom instantly upon unit allocation.
-*   **Intelligent Token Remapping** — Programmed a background redirect inside `fokuscore.lua` that automatically intercepts invisible combinations like `playertarget` when targeting yourself, forcing a direct raw lookup on `player` to prevent black texture voids.
+*   **Intelligent Token Remapping** — Programmed a beachhead redirect inside `fokuscore.lua` that automatically intercepts invisible combinations like `playertarget` when targeting yourself, forcing a direct raw lookup on `player` to prevent black texture voids.
 
 ### 🐛 Fixed
 *   **Roster Disconnect Evacuation** — Hardened `GROUP_ROSTER_UPDATE` logic. If a tracked focus player leaves your raid or party environment completely, the framework triggers an automatic memory purge and frame concealment sequence.
@@ -70,4 +79,4 @@ This release implements a complete modular architecture refactor for the core ad
 *   Core background heartbeat update loop scanning units 10 times a second.
 *   Basic 3D character portrait window matching slate-dark solid backing aesthetics.
 *   Clique click-cast bridging and basic slash triggers (`/fokus`, `/clearfokus`, `/fokusreset`).
-*   Character-locked WTF configuration variables for basic paddock positioning retention.
+*   Character-locked WTF configuration variables for basic padlock positioning retention.
