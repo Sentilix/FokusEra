@@ -5,9 +5,6 @@ local addonName, FokusEraNS = ...
 FokusEraFrame = CreateFrame("Button", "FokusEraFrame", UIParent, "SecureUnitButtonTemplate, BackdropTemplate")
 FokusFrame = FokusEraFrame
 
-FokusEraTargetFrame = CreateFrame("Button", "FokusEraTargetFrame", FokusFrame, "SecureUnitButtonTemplate, BackdropTemplate")
-FokusTargetFrame = FokusEraTargetFrame
-
 -- MAIN FRAME DESIGN (FokusFrame - Height: 48)
 FokusFrame:SetSize(210, 48)
 FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
@@ -27,12 +24,6 @@ FokusFrame:SetBackdrop({
 FokusFrame:SetBackdropColor(0, 0, 0, 0.85)
 FokusFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 
--- FUNCTION: Dynamically anchors the target frame relative to the main frame
-function ReanchorTargetFrame()
-    FokusTargetFrame:ClearAllPoints()
-    FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
-end
-
 -- FUNCTION: Updates the width of the status bars inside the frame based on current frame width
 function FokusEra_UpdateInternalWidths()
     local newWidth = FokusFrame:GetWidth()
@@ -48,50 +39,7 @@ FokusFrame:SetScript("OnDragStart", function(self)
 end)
 FokusFrame:SetScript("OnDragStop", function(self) 
     self:StopMovingOrSizing()
-    ReanchorTargetFrame()
-end)
-
--- FOCUS TARGET FRAME DESIGN (Height: 48 - Symmetrical boundary shell)
-FokusTargetFrame:SetSize(130, 48)
-FokusTargetFrame:SetMovable(true) 
-FokusTargetFrame:EnableMouse(true)
-FokusTargetFrame:RegisterForClicks("AnyUp")
-FokusTargetFrame:Hide()
-
-FokusTargetFrame:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 8, edgeSize = 12,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
-})
-FokusTargetFrame:SetBackdropColor(0, 0, 0, 0.85)
-FokusTargetFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-
--- ADVANCED DRAG SCRIPT: "ALIGN TO GRID" WITH BALANCED MAGNET SNAP
-FokusTargetFrame:RegisterForDrag("LeftButton")
-FokusTargetFrame:SetScript("OnDragStart", function(self) 
-    if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then self:StartMoving() end 
-end)
-
-FokusTargetFrame:SetScript("OnDragStop", function(self) 
-    self:StopMovingOrSizing()
-    
-    local mainX, mainY = FokusFrame:GetCenter()
-    local targetX, targetY = self:GetCenter()
-    
-    if mainX and mainY and targetX and targetY then
-        local currentMainWidth = FokusFrame:GetWidth() 
-        local rawX = math.floor(targetX - mainX - (currentMainWidth / 2) - (130 / 2))
-        local rawY = math.floor(targetY - mainY)
-        
-        -- MAGNETIC SNAP: Forced snap mapping onto identical plane parameters
-        if math.abs(rawY - (0)) <= 10 then rawY = 0 end 
-        
-        FokusEra_OffsetX = rawX
-        FokusEra_OffsetY = rawY
-        
-        ReanchorTargetFrame()
-    end
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
 
 -- Portrait sub-frames configuration
@@ -104,6 +52,13 @@ local portBG = FokusFrame:CreateTexture(nil, "BACKGROUND")
 portBG:SetAllPoints(FokusFrame.portrait)
 portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
+-- NEW: Raid Target Icon Texture (Placed on top-left corner of the main portrait)
+FokusFrame.raidIcon = FokusFrame.staticPortrait:CreateTexture(nil, "OVERLAY")
+FokusFrame.raidIcon:SetSize(16, 16)
+FokusFrame.raidIcon:SetPoint("TOPLEFT", FokusFrame.portrait, "TOPLEFT", -2, 2)
+FokusFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+FokusFrame.raidIcon:Hide()
+
 -- Text strings layout geometry
 FokusFrame.nameText = FokusFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 FokusFrame.nameText:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -6)
@@ -112,24 +67,6 @@ FokusFrame.nameText:SetJustifyH("LEFT")
 FokusFrame.levelText = FokusFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 FokusFrame.levelText:SetPoint("TOPRIGHT", FokusFrame, "TOPRIGHT", -38, -6)
 FokusFrame.levelText:SetJustifyH("RIGHT")
-
--- Target Frame Text & Health Bar Elements
-FokusTargetFrame.nameText = FokusTargetFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-FokusTargetFrame.nameText:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -6)
-FokusTargetFrame.nameText:SetSize(114, 12)
-FokusTargetFrame.nameText:SetJustifyH("LEFT")
-
-FokusTargetFrame.hpBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
-FokusTargetFrame.hpBar:SetSize(114, 14) 
-FokusTargetFrame.hpBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -18)
-FokusTargetFrame.hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
-
-FokusTargetFrame.manaBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
-FokusTargetFrame.manaBar:SetSize(114, 6) 
-FokusTargetFrame.manaBar:SetPoint("TOPLEFT", FokusTargetFrame.hpBar, "BOTTOMLEFT", 0, -2)
-FokusTargetFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-FokusTargetFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
 -- Main Health Bar
 FokusFrame.hpBar = CreateFrame("StatusBar", nil, FokusFrame)
@@ -151,7 +88,6 @@ FokusFrame.manaBar:SetStatusBarColor(0, 0, 1)
 -- Click-cast communication bridge array configuration
 ClickCastFrames = ClickCastFrames or {}
 ClickCastFrames[FokusFrame] = true
-ClickCastFrames[FokusTargetFrame] = true
 
 -- INTERACTIVE CONTROL BUTTONS
 FokusFrame.clearBtn = CreateFrame("Button", nil, FokusFrame)
@@ -189,7 +125,7 @@ FokusFrame.resizeBtn:SetScript("OnMouseUp", function(self, button)
     FokusFrame:StopMovingOrSizing()
     FokusEra_Width = FokusFrame:GetWidth()
     FokusEra_UpdateInternalWidths()
-    ReanchorTargetFrame()
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
 
 function FokusEra_UpdateLockIconColor()
@@ -223,6 +159,6 @@ saveLoader:SetScript("OnEvent", function(self, event)
     FokusEra_UpdateInternalWidths() 
     
     FokusEra_UpdateLockIconColor() 
-    ReanchorTargetFrame()
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
     saveLoader:UnregisterEvent("PLAYER_LOGIN")
 end)

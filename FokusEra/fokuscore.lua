@@ -4,9 +4,9 @@ local addonName, FokusEraNS = ...
 -- Heartbeat Update Loop execution (Fires exactly 10 times a second)
 FokusFrame.timeSinceLastUpdate = 0
 FokusFrame.lastRenderedGUID = nil
+FokusTargetFrame.lastRenderedTargetGUID = nil 
 
 FokusFrame:SetScript("OnUpdate", function(self, elapsed)
-    -- Exit routine if no active focus token data is registered inside the shared namespace
     if not FokusEraNS.FokusEra_CT then 
         self:Hide()
         FokusEraTargetFrame:Hide()
@@ -41,7 +41,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
 
         if not UnitExists(token) then return end
 
-        -- Force active bar frames to preserve stretched dimensions across loop updates
         if FokusEra_UpdateInternalWidths then FokusEra_UpdateInternalWidths() end
 
         -- 1. RE-RENDER MAIN FOCUS METRICS
@@ -64,9 +63,9 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
         local maxPower = UnitPowerMax(token, powerType)
         self.manaBar:SetMinMaxValues(0, maxPower); self.manaBar:SetValue(currentPower)
 
-        if powerType == 0 then self.manaBar:SetStatusBarColor(0, 0.4, 1) -- Blue Mana
-        elseif powerType == 1 then self.manaBar:SetStatusBarColor(1, 0, 0) -- Red Rage
-        elseif powerType == 3 then self.manaBar:SetStatusBarColor(1, 1, 0) -- Yellow Energy
+        if powerType == 0 then self.manaBar:SetStatusBarColor(0, 0.4, 1) 
+        elseif powerType == 1 then self.manaBar:SetStatusBarColor(1, 0, 0) 
+        elseif powerType == 3 then self.manaBar:SetStatusBarColor(1, 1, 0) 
         else self.manaBar:SetStatusBarColor(0, 0.8, 0.8) end
 
         if self.portrait then
@@ -76,7 +75,21 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             end
         end
 
-        -- 2. RE-RENDER FOCUS TARGET METRICS (Now with unified power bar loop)
+        -- NEW: DYNAMIC RAID TARGET ICON SCANNER FOR MAIN FOCUS
+        local raidIndex = GetRaidTargetIndex(token)
+        if raidIndex and raidIndex >= 1 and raidIndex <= 8 then
+            -- Mathematical coordinates to cut out the specific icon from Blizzard's 4x2 texture grid grid
+            local left = mod(raidIndex - 1, 4) * 0.25
+            local right = left + 0.25
+            local top = floor((raidIndex - 1) / 4) * 0.25
+            local bottom = top + 0.25
+            self.raidIcon:SetTexCoord(left, right, top, bottom)
+            self.raidIcon:Show()
+        else
+            self.raidIcon:Hide()
+        end
+
+        -- 2. RE-RENDER FOCUS TARGET METRICS
         local targetToken = token .. "target"
         
         if UnitExists(targetToken) then
@@ -102,10 +115,39 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             FokusEraTargetFrame.manaBar:SetMinMaxValues(0, tMaxPower)
             FokusEraTargetFrame.manaBar:SetValue(tCurrentPower)
 
-            if tPowerType == 0 then FokusEraTargetFrame.manaBar:SetStatusBarColor(0, 0.4, 1) -- Blue Mana
-            elseif tPowerType == 1 then FokusEraTargetFrame.manaBar:SetStatusBarColor(1, 0, 0) -- Red Rage
-            elseif tPowerType == 3 then FokusEraTargetFrame.manaBar:SetStatusBarColor(1, 1, 0) -- Yellow Energy
+            if tPowerType == 0 then FokusEraTargetFrame.manaBar:SetStatusBarColor(0, 0.4, 1) 
+            elseif tPowerType == 1 then FokusEraTargetFrame.manaBar:SetStatusBarColor(1, 0, 0) 
+            elseif tPowerType == 3 then FokusEraTargetFrame.manaBar:SetStatusBarColor(1, 1, 0) 
             else FokusEraTargetFrame.manaBar:SetStatusBarColor(0, 0.8, 0.8) end
+            
+            if FokusEraTargetFrame.portrait then
+                FokusEraTargetFrame.portrait:Show()
+                local currentTargetGUID = UnitGUID(targetToken)
+                
+                if FokusTargetFrame.lastRenderedTargetGUID ~= currentTargetGUID then
+                    local renderToken = targetToken
+                    if targetToken == "playertarget" and currentTargetGUID == UnitGUID("player") then
+                        renderToken = "player"
+                    end
+                    
+                    FokusEraTargetFrame.portrait:SetUnit(renderToken)
+                    FokusEraTargetFrame.portrait:SetCamera(0)
+                    FokusTargetFrame.lastRenderedTargetGUID = currentTargetGUID
+                end
+            end
+
+            -- NEW: DYNAMIC RAID TARGET ICON SCANNER FOR FOCUS TARGET
+            local tRaidIndex = GetRaidTargetIndex(targetToken)
+            if tRaidIndex and tRaidIndex >= 1 and tRaidIndex <= 8 then
+                local left = mod(tRaidIndex - 1, 4) * 0.25
+                local right = left + 0.25
+                local top = floor((tRaidIndex - 1) / 4) * 0.25
+                local bottom = top + 0.25
+                FokusEraTargetFrame.raidIcon:SetTexCoord(left, right, top, bottom)
+                FokusEraTargetFrame.raidIcon:Show()
+            else
+                FokusEraTargetFrame.raidIcon:Hide()
+            end
             
             FokusEraTargetFrame:Show()
         else
@@ -133,6 +175,7 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
         FokusEraTargetFrame:SetAttribute("*unit", unitToken .. "target")
         
         FokusFrame.lastRenderedGUID = nil
+        FokusTargetFrame.lastRenderedTargetGUID = nil 
         FokusFrame:Show()
     end
 end
@@ -143,18 +186,42 @@ function FokusEraNS.FokusEra_ClearGroupFocusLogic()
     if FokusFrame then
         FokusFrame:SetAttribute("unit", nil); FokusFrame:SetAttribute("*unit", nil)
         FokusEraTargetFrame:SetAttribute("unit", nil); FokusEraTargetFrame:SetAttribute("*unit", nil)
-        FokusFrame.lastRenderedGUID = nil; FokusFrame:Hide(); FokusEraTargetFrame:Hide()
+        FokusFrame.lastRenderedGUID = nil; FokusTargetFrame.lastRenderedTargetGUID = nil
+        FokusFrame:Hide(); FokusEraTargetFrame:Hide()
     end
     print("|cff00ff00[FokusEra]|r Focus target cleared.")
 end
 
 ---------------------------------------------------------
--- BUGFIX: AUTOMATIC PURGE ON LEAVING GROUPS
+-- BUGFIX: AUTOMATIC PURGE ON ROSTER CHANGES
 ---------------------------------------------------------
 local groupCheckFrame = CreateFrame("Frame")
 groupCheckFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 groupCheckFrame:SetScript("OnEvent", function(self, event)
-    if FokusEraNS.FokusEra_CT and not IsInRaid() and not IsInGroup() then
-        if FokusEraNS.FokusEra_CT ~= "player" then FokusEraNS.FokusEra_ClearGroupFocusLogic() end
+    if FokusEraNS.FokusEra_CT then
+        if FokusEraNS.FokusEra_CT == "player" then return end
+
+        local targetStillInGroup = false
+        
+        if IsInRaid() then
+            for i = 1, 40 do
+                if UnitGUID("raid"..i) == FokusEraNS.FokusEra_CurrentGUID then
+                    targetStillInGroup = true
+                    break
+                end
+            end
+        else
+            for i = 1, 4 do
+                if UnitGUID("party"..i) == FokusEraNS.FokusEra_CurrentGUID then
+                    targetStillInGroup = true
+                    break
+                end
+            end
+        end
+        
+        if not targetStillInGroup then
+            FokusEraNS.FokusEra_ClearGroupFocusLogic()
+            if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
+        end
     end
 end)
