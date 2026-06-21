@@ -4,6 +4,8 @@ A lightweight, high-performance, and completely standalone focus frame structure
 
 FokusEra operates entirely on its own visual engine, providing a clean, slate-dark aesthetic without bulky interface overhauls or reliance on external libraries. It bridges the game's background metrics with keyboard action bar macros and provides a dedicated, layout-synchronized **FocusTarget** frame featuring realtime health, mirrored portrait rendering, and intelligent dispel scanning.
 
+![FokusEra Interface Preview](images/fokusera1.png)
+
 ---
 
 ## 🚀 Quick Start Guide (Get Moving in 10 Seconds)
