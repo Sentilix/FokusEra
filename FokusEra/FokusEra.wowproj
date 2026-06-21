@@ -17,10 +17,16 @@
     <Content Include="fokuscore.lua">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="fokusdispel.lua">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="fokusera.toc">
       <SubType>TableOfContents</SubType>
     </Content>
     <Content Include="fokusinit.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="fokusraidicons.lua">
       <SubType>Code</SubType>
     </Content>
     <Content Include="fokusspellbar.lua">
