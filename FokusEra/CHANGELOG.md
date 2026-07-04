@@ -4,79 +4,72 @@ All notable changes to the **FokusEra** addon architecture will be documented in
 
 ---
 
-## — 2026-06-21 (version 1.2.3)
+## — 2026-06-21 (version 1.3.0)
 
-This patch release resolves external unit aura synchronization anomalies, preventing ghostly target buff projections from leaking onto custom secure frame layouts.
+### ✨ Added
+* Added buffs and debuffs to the Focus window.
+* Added combined buffs and debuffs onto a single row for the Focus Target window.
+* Added an options menu directly inside Blizzard's Options > Addons interface.
+* Added custom secure checkboxes to completely eliminate memory taint.
+* Added saved variables to remember aura visibility settings per character.
 
 ### 🐛 Fixed
-*   **Aura Token Linkage** — Wired direct Blizzard metadata registration handlers (`FokusFrame.unit = unitToken` and `FokusTargetFrame.unit = unitToken .. "target"`) inside the core data allocation loops in `fokuscore.lua`. This explicitly alerts external aura frameworks and dependency engines to monitor and render the focus unit's native buff signatures instead of erroneously falling back onto the standard active player target viewport.
+* Fixed a bug where hiding frames during combat would trigger action blocked errors.
+* Moved cross-module functions into the private namespace to prevent addon conflicts.
+
+---
+
+## — 2026-06-21 (version 1.2.3)
+
+### 🐛 Fixed
+* Fixed a bug where target buffs would erroneously display on the Focus frame by assigning proper metadata unit linkage.
 
 ---
 
 ## — 2026-06-21 (version 1.2.2)
 
-This release implements tactical raid target marking overlays, an intelligent class-specific debuff prioritization border engine, and comprehensive in-combat graphics protection.
-
 ### ✨ Added
-*   **Smart Debuff Border Highlights** — Frame backdrops dynamically colorize their borders based on the highest weighted threat (Magic = Blue, Curse = Purple, Disease = Brown, Poison = Green) utilizing the new `fokusdispel.lua` engine module.
-*   **Automated Class Dispel Audit** — Deployed an automated startup routine mapping out specific debuff weighting metrics based on your chosen class capabilities (Priest: Magic ➡️ Disease, Shaman: Poison ➡️ Disease).
-*   **Zero-Nil Fallback Security** — Engineered a hardcoded baseline priority backup map ensuring non-healer classes fallback safely onto standard Blizzard dispels without throwing Lua evaluation crashes.
-*   **Raid Target Symbol Overlays** — Integrated real-time texture coordinates tracking active raid marks (Star, Moon, Skull, etc.) and rendering them seamlessly on corresponding corners of both portrait blocks via `fokusraidicons.lua`.
+* Added a mirrored 3D portrait to the right side of the Focus Target frame.
+* Added an automatic close-up camera zoom on target load events.
+* Added an automated startup system that colorizes frame borders based on your class dispel capabilities.
+* Added real-time raid target icon overlays onto the corners of both portraits.
 
 ### 🐛 Fixed
-*   **Combat Lockdown Shield** — Embedded strict `InCombatLockdown()` interceptor blocks inside `FokusEra_UpdateInternalWidths()`. The addon now actively halts status bar resizing routines mid-encounter, completely mitigating `ADDON_ACTION_BLOCKED` system graphics exceptions.
-*   **Visual Ergonomics Filtering** — Confined the dynamic dispel border highlights exclusively to the primary Focus frame canvas, safeguarding the healer's core task field from unnecessary clutter on the Target of Focus layout.
-
----
-
-## — 2026-06-21 (version 1.2.1)
-
-This release establishes visual layout symmetry with dual 3D model capabilities and hardens party evacuation validation routines.
-
-### ✨ Added
-*   **Mirrored 3D Target Portrait** — Upgraded `FokusEraTargetFrame` with an internal 3D `PlayerModel` viewport mirrored symmetrically to the right-hand margin using the isolated `fokustargetui.lua` module.
-*   **OnModelLoaded Camera Anchor** — Fixed 3D camera drift by introducing an automated model load event listener, enforcing a high-precision close-up face zoom instantly upon unit allocation.
-*   **Intelligent Token Remapping** — Programmed a beachhead redirect inside `fokuscore.lua` that automatically intercepts invisible combinations like `playertarget` when targeting yourself, forcing a direct raw lookup on `player` to prevent black texture voids.
-
-### 🐛 Fixed
-*   **Roster Disconnect Evacuation** — Hardened `GROUP_ROSTER_UPDATE` logic. If a tracked focus player leaves your raid or party environment completely, the framework triggers an automatic memory purge and frame concealment sequence.
+* Fixed action blocked errors in combat by freezing status bar resizing routines mid-encounter.
+* Restricted dispel border highlights exclusively to the primary Focus frame to reduce visual clutter.
 
 ---
 
 ## — 2026-06-21 (version 1.2.0)
 
-This release introduces an advanced Click-to-Cast Action Bar system directly onto the interface layouts.
-
 ### ✨ Added
-*   **Secure Action Button Row** — Embedded 5 horizontal `SecureActionButtonTemplate` slots hovering over the primary health bar profile for safe in-combat action execution via `fokusspellbar.lua`.
-*   **Chat-Driven Configuration UI** — Added the data-parsing module `fokusspellcmd.lua` supporting the `/fokusspell` slot scanning and validation syntax.
-*   **Numeric Database Protection** — Auto-resolving and storing raw `SpellID` keys instead of volatile localized string values.
-*   **Slate-Dark Silhouettes** — Formatted solid 1-pixel black borders framing active hot-button elements.
-*   **Unified Layout Reset** — Bound active spell profile purges (`FokusEra_Spells = {}`) to fire simultaneously during `/fokusreset` cycles.
+* Added 5 secure click-to-cast action slots above the primary health bar.
+* Added the `/fokusspell` chat command with automatic slot allocation and spelling validation.
+* Added numeric SpellID database tracking to fix localized texture loading glitches.
+* Added solid 1-pixel black borders around the active click-to-cast spell buttons.
+* Added spell profile clearing to the main layout `/fokusreset` command.
 
 ---
 
 ## — 2026-06-20 (version 1.1.0)
 
-This release implements a complete modular architecture refactor for the core addon framework.
-
 ### ✨ Added
-*   **Granular File Splitting** — Refactored the monolithic prototype into distinct source components (`init`, `ui`, `core`, `chat`) communicating seamlessly via hidden Blizzard namespace parameters (`...`).
-*   **Synchronized Sub-Frames** — Introduced the dedicated, relative-anchored **FocusTarget** window tracking units targeted by your active focus player.
-*   **Horizontal Stretch Tuning** — Added a layout resizing handle permitting custom layout width expansions.
-*   **Align to Grid Math** — Injected geometric calculation tools into drag arrays, rounding layout positioning offsets to clean integers and enabling vertical magnet snapping.
+* Refactored monolithic code into clean source files via shared Blizzard namespace tables.
+* Added a relative-anchored Focus Target frame tracking your focus target's target.
+* Added a horizontal resize handle to customize frame width adjustments.
+* Added an align-to-grid system with horizontal magnetic snapping.
 
 ### 🐛 Fixed
-*   **Case-Sensitivity Pass** — Unified all directory, structural, and naming references to use the strict lowercase **K** architecture (`fokusera`).
-*   **Modern API Transition** — Swapped out deprecated layout scaling parameters for the modern `SetResizeBounds` API.
+* Unified case-sensitivity paths to match the strict lowercase folder structure.
+* Transitioned deprecated scaling parameters to the modern layout bounding API.
 
 ---
 
 ## — 2026-06-06 (version 1.0.0)
 
 ### ✨ Added
-*   Initial functional monolithic single-file prototype build (`fokusera.lua`).
-*   Core background heartbeat update loop scanning units 10 times a second.
-*   Basic 3D character portrait window matching slate-dark solid backing aesthetics.
-*   Clique click-cast bridging and basic slash triggers (`/fokus`, `/clearfokus`, `/fokusreset`).
-*   Character-locked WTF configuration variables for basic padlock positioning retention.
+* Initial single-file focus frame prototype build.
+* Heartbeat update loop running 10 times a second.
+* 3D portrait window with a solid slate-dark backdrop.
+* Clique click-cast support and standard slash commands (`/fokus`, `/clearfokus`, `/fokusreset`).
+* Character-locked frame positioning persistence via WTF variables.

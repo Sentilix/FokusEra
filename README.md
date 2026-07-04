@@ -1,8 +1,8 @@
 # 🔮 FokusEra — Standalone Focus Frame System for WoW Classic Era
 
-![FokusEra v1.2.2 Interface Preview](FokusEra/images/fokusera1.png)
+![FokusEra v1.3.0 Interface Preview](FokusEra/images/fokusera1.png)
 
-Welcome to the official repository for **FokusEra (v1.2.2)**, a high-performance, 100% standalone unit frame addon engineered exclusively for **World of Warcraft: Classic Era (Patch 1.15.x)**.
+Welcome to the official repository for **FokusEra (v1.3.0)**, a high-performance, 100% standalone unit frame addon engineered exclusively for **World of Warcraft: Classic Era (Patch 1.15.x)**.
 
 FokusEra operates entirely on its own visual engine, providing a clean, slate-dark aesthetic without bulky interface overhauls or reliance on external libraries. It bridges the game's background metrics with keyboard action bar macros and provides a dedicated, layout-synchronized **FocusTarget** frame featuring realtime health, mirrored portrait rendering, and intelligent dispel scanning.
 
@@ -12,7 +12,9 @@ FokusEra operates entirely on its own visual engine, providing a clean, slate-da
 
 *   **Symmetrical Dual-Frame Design** — Synchronized primary Focus and mirrored **FocusTarget** windows built on an identical 48-pixel height axis for structural alignment.
 *   **Mirrored 3D Portraits** — Primary focus renders portraits on the left, while the target frame mirrors it perfectly to the right with automated, responsive face zooming.
-*   **Intelligent Class Dispel Highlights** — Frame borders dynamically illuminate based on active dispel priorities automated for your specific healer class (e.g., Priests prioritize Magic ➡️ Disease, Shamans prioritize Poison ➡️ Disease).
+*   **Dynamic 12x12 Aura Displays** — Displays compact 12x12 pixel buffs and debuffs horizontally beneath both frames, automatically adapting to your customized frame widths.
+*   **Blizzard Options Integration** — Adds a clean configuration menu directly inside WoW's *Options > Addons* menu for 100% taint-free checkbox configurations.
+*   **Intelligent Class Dispel Highlights** — Frame borders dynamically illuminate based on active dispel priorities automated for your specific healer class (e.g., Priests prioritize Magic ➡️ Disease).
 *   **Built-in Click-to-Cast Spellbar** — Cast spells dynamically using a row of 5 secure, custom-assigned icons hovering directly above the primary health bar profile.
 *   **Raid Icon Target Overlays** — Real-time index mapping rendering lucky stars, moons, or skulls onto the portrait windows.
 *   **Combat Lockdown Shielding** — Advanced memory protections that actively freeze layout adjustments mid-encounter to eliminate Blizzard `ADDON_ACTION_BLOCKED` system graphic exceptions.
