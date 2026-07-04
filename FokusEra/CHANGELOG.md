@@ -4,7 +4,7 @@ All notable changes to the **FokusEra** addon architecture will be documented in
 
 ---
 
-## — 2026-06-21 (version 1.3.0)
+## — 2026-07-04 (version 1.3.0)
 
 ### ✨ Added
 * Added buffs and debuffs to the Focus window.
