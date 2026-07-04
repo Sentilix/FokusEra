@@ -8,8 +8,10 @@ FokusTargetFrame.lastRenderedTargetGUID = nil
 
 FokusFrame:SetScript("OnUpdate", function(self, elapsed)
     if not FokusEraNS.FokusEra_CT then 
-        self:Hide()
-        FokusEraTargetFrame:Hide()
+        if not InCombatLockdown() then
+            self:Hide()
+            FokusEraTargetFrame:Hide()
+        end
         return 
     end
 
@@ -83,8 +85,8 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             self:SetBackdropBorderColor(mainR, mainG, mainB, 1)
         end
 
-        -- NEW v1.3.0: Execute dynamic aura render monitoring tracking nodes
-        if FokusEra_RefreshAuras then FokusEra_RefreshAuras() end
+        -- Execute dynamic aura render monitoring tracking nodes through safe namespace
+        if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
 
         -- 2. RE-RENDER FOCUS TARGET METRICS
         local targetToken = token .. "target"
@@ -137,12 +139,21 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             
             FokusEraTargetFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
             
-            FokusEraTargetFrame:Show()
+            if not InCombatLockdown() then FokusEraTargetFrame:Show() end
         else
-            FokusEraTargetFrame:Hide() 
+            -- Safe combat fallback. Clear visuals safely instead of calling .Hide() during active lockdown!
+            if InCombatLockdown() then
+                FokusEraTargetFrame.nameText:SetText("")
+                FokusEraTargetFrame.hpBar:SetValue(0)
+                FokusEraTargetFrame.manaBar:SetValue(0)
+                if FokusEraTargetFrame.portrait then FokusEraTargetFrame.portrait:Hide() end
+                if FokusEraTargetFrame.raidIcon then FokusEraTargetFrame.raidIcon:Hide() end
+            else
+                FokusEraTargetFrame:Hide()
+            end
         end
 
-        self:Show()
+        if not InCombatLockdown() then self:Show() end
         self.timeSinceLastUpdate = 0
     end
 end)
@@ -156,8 +167,6 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
         FokusEraNS.FokusEra_CurrentName = UnitName(unitToken)
         print("|cff00ff00[FokusEra]|r Focus target set to: " .. FokusEraNS.FokusEra_CurrentName)
         
-        -- FIX: Assign the raw unit string metadata straight onto the frame engine properties!
-        -- This alerts external aura engines to parse the core target's buffs instead of falling back to default viewports.
         FokusFrame.unit = unitToken
         FokusFrame:SetAttribute("unit", unitToken)
         FokusFrame:SetAttribute("*unit", unitToken)
@@ -167,6 +176,8 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
             FokusTargetFrame:SetAttribute("unit", unitToken .. "target")
             FokusTargetFrame:SetAttribute("*unit", unitToken .. "target")
         end
+        
+        if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
         
         FokusFrame.lastRenderedGUID = nil
         FokusTargetFrame.lastRenderedTargetGUID = nil 
@@ -186,8 +197,22 @@ function FokusEraNS.FokusEra_ClearGroupFocusLogic()
             FokusTargetFrame:SetAttribute("unit", nil); FokusTargetFrame:SetAttribute("*unit", nil)
         end
         
+        if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
+        
         FokusFrame.lastRenderedGUID = nil; FokusTargetFrame.lastRenderedTargetGUID = nil
-        FokusFrame:Hide(); FokusEraTargetFrame:Hide()
+        
+        -- Safe combat de-allocation. Clear data footprints and delay visibility hooks if in combat!
+        if InCombatLockdown() then
+            FokusFrame.nameText:SetText("")
+            FokusFrame.hpBar:SetValue(0)
+            FokusFrame.manaBar:SetValue(0)
+            FokusTargetFrame.nameText:SetText("")
+            FokusTargetFrame.hpBar:SetValue(0)
+            FokusTargetFrame.manaBar:SetValue(0)
+        else
+            FokusFrame:Hide()
+            FokusEraTargetFrame:Hide()
+        end
     end
     print("|cff00ff00[FokusEra]|r Focus target cleared.")
 end
@@ -197,7 +222,16 @@ end
 ---------------------------------------------------------
 local groupCheckFrame = CreateFrame("Frame")
 groupCheckFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+groupCheckFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 groupCheckFrame:SetScript("OnEvent", function(self, event)
+    if event == "PLAYER_REGEN_ENABLED" then
+        if not FokusEraNS.FokusEra_CT and FokusFrame:IsShown() then
+            FokusFrame:Hide()
+            FokusEraTargetFrame:Hide()
+        end
+        return
+    end
+
     if FokusEraNS.FokusEra_CT then
         if FokusEraNS.FokusEra_CT == "player" then return end
 
@@ -222,6 +256,7 @@ groupCheckFrame:SetScript("OnEvent", function(self, event)
         if not targetStillInGroup then
             FokusEraNS.FokusEra_ClearGroupFocusLogic()
             if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
+            if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
         end
     end
 end)

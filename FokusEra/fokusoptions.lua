@@ -1,15 +1,43 @@
 -- Catch the shared addon namespace parameter from the WoW engine
 local addonName, FokusEraNS = ...
 
--- Create the main canvas frame for Blizzard's Settings layout catalog
 local optionsFrame = CreateFrame("Frame", "FokusEraOptionsFrame", UIParent)
 optionsFrame.name = "FokusEra"
 
--- Helper function to generate standardized modern Blizzard Checkboxes
-local function CreateSettingCheckbox(parent, labelText, tooltipText, pointY, dbVariable)
-    local cb = CreateFrame("CheckButton", nil, parent, "InterfaceOptionsCheckButtonTemplate")
+local function CreateSecureCheckbox(parent, labelText, tooltipText, pointY, dbVariable)
+    local cb = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    cb:SetSize(20, 20)
     cb:SetPoint("TOPLEFT", 16, pointY)
-    cb.Text:SetText(labelText)
+    
+    cb:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        tile = false, tileSize = 0, edgeSize = 1,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 }
+    })
+    cb:SetBackdropColor(0.05, 0.05, 0.05, 1)
+    cb:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+    
+    cb.checkTex = cb:CreateTexture(nil, "OVERLAY")
+    cb.checkTex:SetSize(14, 14)
+    cb.checkTex:SetPoint("CENTER", cb, "CENTER", 0, 0)
+    cb.checkTex:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    cb.checkTex:Hide()
+    
+    cb.text = cb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    cb.text:SetPoint("LEFT", cb, "RIGHT", 8, 0)
+    cb.text:SetText(labelText)
+    
+    cb.UpdateState = function()
+        if _G[dbVariable] then cb.checkTex:Show() else cb.checkTex:Hide() end
+    end
+    
+    cb:SetScript("OnClick", function(self)
+        if InCombatLockdown() then return end
+        _G[dbVariable] = not _G[dbVariable]
+        self.UpdateState()
+        if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
+    end)
     
     cb:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -18,47 +46,38 @@ local function CreateSettingCheckbox(parent, labelText, tooltipText, pointY, dbV
     end)
     cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
     
-    cb:SetScript("OnClick", function(self)
-        _G[dbVariable] = self:GetChecked()
-        -- Trigger an instant redraw of the aura layout frames if focus is active
-        if FokusEra_RefreshAuras then FokusEra_RefreshAuras() end
-    end)
-    
     return cb
 end
 
--- Initialize and register the category inside Blizzard's Addon options canvas
 optionsFrame:RegisterEvent("ADDON_LOADED")
 optionsFrame:SetScript("OnEvent", function(self, event, loadedAddon)
     if loadedAddon ~= addonName then return end
     
-    -- Setup baseline configurations if database keys are non-existent
     if FokusEra_ShowBuffs == nil then FokusEra_ShowBuffs = true end
     if FokusEra_ShowDebuffs == nil then FokusEra_ShowDebuffs = true end
+    if FokusEra_ShowTargetAuras == nil then FokusEra_ShowTargetAuras = true end -- Default to active
     
-    -- Title interface text block layout
     local title = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText("FokusEra Settings")
     
     local desc = self:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
     desc:SetPoint("TOPLEFT", 16, -40)
-    desc:SetText("Configure the visibility vectors for the standalone focus frame setup.")
+    desc:SetText("Configure the visibility vectors for the standalone focus frame setup without risking memory taint.")
     
-    -- Instantiate our two functional config checkboxes
-    self.buffCB = CreateSettingCheckbox(self, "Show Beneficial Buffs", "Toggle the display grid for active beneficial buffs tracking under the focus frame.", -70, "FokusEra_ShowBuffs")
-    self.debuffCB = CreateSettingCheckbox(self, "Show Harmful Debuffs", "Toggle the display grid for harmful debuffs/status afflictions tracking under the focus frame.", -105, "FokusEra_ShowDebuffs")
+    self.buffCB = CreateSecureCheckbox(self, "Show Focus Buffs", "Toggle the display grid for active beneficial buffs tracking under the focus frame.", -70, "FokusEra_ShowBuffs")
+    self.debuffCB = CreateSecureCheckbox(self, "Show Focus Debuffs", "Toggle the display grid for harmful debuffs/status afflictions tracking under the focus frame.", -105, "FokusEra_ShowDebuffs")
+    -- NEW Checkbox for Focus Target frame
+    self.targetCB = CreateSecureCheckbox(self, "Show Focus Target Auras", "Toggle the complete display grid (Both Buffs and Debuffs combined) under the Focus Target frame.", -140, "FokusEra_ShowTargetAuras")
     
-    -- Force sync the checkboxes with saved character database profiles on startup
-    self.buffCB:SetChecked(FokusEra_ShowBuffs)
-    self.debuffCB:SetChecked(FokusEra_ShowDebuffs)
+    self.buffCB.UpdateState()
+    self.debuffCB.UpdateState()
+    self.targetCB.UpdateState()
     
-    -- Modern Classic Era Registration API pipeline handler
     if Settings and Settings.RegisterCanvasLayoutCategory then
         local category = Settings.RegisterCanvasLayoutCategory(self, "FokusEra")
         Settings.RegisterAddOnCategory(category)
     else
-        -- Traditional backward-compatible callback fallback path
         InterfaceOptions_AddCategory(self)
     end
     
