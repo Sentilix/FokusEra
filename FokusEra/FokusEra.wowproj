@@ -11,6 +11,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="CHANGELOG.md" />
+    <Content Include="fokusauras.lua">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="fokuschat.lua">
       <SubType>Code</SubType>
     </Content>
@@ -24,6 +27,9 @@
       <SubType>TableOfContents</SubType>
     </Content>
     <Content Include="fokusinit.lua">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="fokusoptions.lua">
       <SubType>Code</SubType>
     </Content>
     <Content Include="fokusraidicons.lua">

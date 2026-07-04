@@ -83,6 +83,9 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             self:SetBackdropBorderColor(mainR, mainG, mainB, 1)
         end
 
+        -- NEW v1.3.0: Execute dynamic aura render monitoring tracking nodes
+        if FokusEra_RefreshAuras then FokusEra_RefreshAuras() end
+
         -- 2. RE-RENDER FOCUS TARGET METRICS
         local targetToken = token .. "target"
         
