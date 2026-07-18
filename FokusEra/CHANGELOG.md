@@ -4,6 +4,12 @@ All notable changes to the **FokusEra** addon architecture will be documented in
 
 ---
 
+## — 2026-07-18 (version 1.3.1)
+
+### ✨ Changed
+* Updated TOC interface compatibility flags for Patch 1.15.9.
+
+
 ## — 2026-07-04 (version 1.3.0)
 
 ### ✨ Added

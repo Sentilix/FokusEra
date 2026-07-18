@@ -89,5 +89,5 @@ For clean client initialization, your core folder directory path must be named e
 ## 🚀 Post-Installation Verification Checklist
 
 1. Ensure **Clique** is updated to map onto external addons if you want direct mouseover click-casting.
-2. Boot into the server environment. Type **`/fokusreset`** to force the layout sandboxes onto your screen (Your system chat frame will confirm authorization with the active version string: **`FokusEra 1.3.0`**).
+2. Boot into the server environment. Type **`/fokusreset`** to force the layout sandboxes onto your screen (Your system chat frame will confirm authorization with the active version string).
 3. Unlock the yellow wheel icon, adjust your sizing stretch widths, use `/fokusspell` to configure your hot-buttons, and clamp the padlock down red (Locked) to save profiles safely!
