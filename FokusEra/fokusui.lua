@@ -13,8 +13,7 @@ FokusFrame:EnableMouse(true)
 FokusFrame:RegisterForClicks("AnyUp")
 FokusFrame:Hide()
 
--- FIX v1.4.0: THE DIALOG STRATA FORTRESS!
--- Shoots the secure frame completely over WeakAuras, shadow frames, and screen clutter to force click capture!
+-- FORCE SECURE LAYER FORWARD OVER WEAKAURAS & SHADOW ROOT
 FokusFrame:SetFrameStrata("DIALOG")
 FokusFrame:SetFrameLevel(20)
 
@@ -41,17 +40,38 @@ FokusFrame:RegisterForDrag("LeftButton")
 FokusFrame:SetScript("OnDragStart", function(self)
     if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then
         FokusShadowFrame:StartMoving()
+        
+        -- FIX v1.4.0: LIVE DRAG ENGINE TERNED ON!
+        -- Forces a lightweight heartbeat to bind the active visible frames directly onto the mouse position 
+        -- dynamically as you drag it across your screen, preventing any visual ghost lagging!
+        FokusShadowFrame:SetScript("OnUpdate", function()
+            local sLeft = FokusShadowFrame:GetLeft()
+            local sBottom = FokusShadowFrame:GetBottom()
+            if sLeft and sBottom and not InCombatLockdown() then
+                FokusFrame:ClearAllPoints()
+                FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", sLeft, sBottom)
+                if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+                if ReanchorTargetFrame then ReanchorTargetFrame() end
+            end
+        end)
     end
 end)
+
 FokusFrame:SetScript("OnDragStop", function(self)
+    -- Kill the temporary real-time update loop immediately to completely save CPU cycles
+    FokusShadowFrame:SetScript("OnUpdate", nil)
     FokusShadowFrame:StopMovingOrSizing()
-    local mainX, mainY = FokusShadowFrame:GetCenter()
-    local parentX, parentY = UIParent:GetCenter()
-    if mainX and mainY and parentX and parentY then
-        FokusEra_OffsetX = math.floor(mainX - parentX)
-        FokusEra_OffsetY = math.floor(mainY - parentY)
+    
+    if not InCombatLockdown() then
+        FokusEra_ShadowX = math.floor(FokusShadowFrame:GetLeft())
+        FokusEra_ShadowY = math.floor(FokusShadowFrame:GetBottom())
+        
+        FokusFrame:ClearAllPoints()
+        FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
     end
+    -- Final secure anchoring refresh
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
 
 -- Portrait sub-frames configuration

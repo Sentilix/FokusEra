@@ -4,7 +4,9 @@ A lightweight, high-performance, and completely standalone focus frame structure
 
 FokusEra operates entirely on its own visual engine, providing a clean, slate-dark aesthetic without bulky interface overhauls or reliance on external libraries. It bridges the game's background metrics with keyboard action bar macros and provides a dedicated, layout-synchronized **FocusTarget** frame featuring realtime health, mirrored portrait rendering, and intelligent dispel scanning.
 
-![FokusEra Interface Preview](images/fokusera1.png)
+![FokusEra Interface Preview](https://media.forgecdn.net/attachments/1748/465/fokusera1-png.png)
+
+
 
 ---
 
@@ -14,7 +16,6 @@ If you just want to set up your frames and jump straight into a dungeon, use the
 
 1.  **Set Your Focus** — Select any friendly party or raid member and type **`/fokus`** into your chat.
 2.  **Move the Layout** — Ensure your yellow gearwheel icon is unlocked (yellow), then hold **`Alt + Left-Click + Drag`** to reposition either frame independently across your viewport.
-3.  **Bind Your Spells** — Type **`/fokusspell [Spell Name]`** (e.g., `/fokusspell Flash Heal`) to instantly bind a click-to-cast action icon directly above your focus frame health bar!
 
 ---
 
@@ -35,13 +36,14 @@ If you just want to set up your frames and jump straight into a dungeon, use the
 
 ---
 
+![Slash Commands](https://media.forgecdn.net/attachments/1748/466/fokusera2-png.png)
+
 ## ⌨️ Slash Commands Overview
 
 Execute these key strings inside your in-game text frame input:
 
 *   `/fokus` — Assigns your currently active friendly target pointer to the framework (Usable out of combat).
 *   `/clearfokus` — De-allocates tracking targets, completely conceals active frame structures, and purges system memory keys.
-*   `/fokusspell [Spell Name]` — Binds an icon automatically to the next free layout slot (Or use `/fokusspell [1-5] [Name]` for specific cells, or `/fokusspell [1-5]` to clear a slot).
 *   `/fokusreset` — Safely flushes runtime coordinates, database entries, and action slots, snapping both frames back to default lower-third grid spaces side by side.
 *   `/fokusversion` — Audits active raid or party communication channels for checking matching FokusEra client installations.
 *   `/fokushelp` — Prints a layout command cheat sheet checklist index directly into your local log pane.
@@ -73,16 +75,16 @@ For clean client initialization, your core folder directory path must be named e
 2.  **`CHANGELOG.md`** — Comprehensive release and update changelog history tracking ledger.
 3.  **`fokusera.toc`** — The initialization list that loads variables and modules in sequence.
 4.  **`fokusinit.lua`** — Initializes shared namespaces and handles system startup variables.
-5.  **`fokusoptions.lua`** — Registers the custom configuration menu directly into Blizzard's options layout panel.
-6.  **`fokusui.lua`** — Establishes secure button canvas structures, fonts, backdrops, and resize motors for the main frame.
-7.  **`fokustargetui.lua`** — Constructs the mirrored target frame, right-anchored 3D portrait, and magnet-snap alignments.
-8.  **`fokusspellbar.lua`** — Manages the 5 horizontal Click-to-Cast action button frames and kulsort spell icons.
-9.  **`fokusauras.lua`** — Handles dynamic horizontal width calculations and renders 12x12 buff/debuff grids beneath both frames.
-10. **`fokusdispel.lua`** — Audits debuff weight matrices based on active class capabilities to shift backdrop border colors.
-11. **`fokusraidicons.lua`** — Scans and crops real-time raid markers onto corresponding corners of both portraits.
-12. **`fokuscore.lua`** — Drives the lightweight background heartbeat update loop, token-remapping, and data-routing.
-13. **`fokuschat.lua`** — Binds system commands (`/fokus`, `/fokusreset`, `/fokushelp`) and logs version pings.
-14. **`fokusspellcmd.lua`** — Manages data-parsing and spell database scanning triggers for the `/fokusspell` syntax.
+5.  **`fokusshadowui.lua`** — Establishes the master invisible single source of truth shadow frame anchor based on raw pixel coordinates.
+6.  **`fokusoptions.lua`** — Registers the custom configuration menu directly into Blizzard's options layout panel.
+7.  **`fokusui.lua`** — Establishes secure button canvas structures, fonts, backdrops, and resize motors for the main player frame.
+8.  **`fokustargetui.lua`** — Constructs the mirrored target frame, right-anchored 3D portrait, and magnet-snap alignments.
+9.  **`fokusnpcui.lua`** — Generates the non-secure layout shells and mirroring logic tailored for combat boss and target-NPC tracking.
+10. **`fokusauras.lua`** — Handles dynamic horizontal width calculations and renders 12x12 buff/debuff grids beneath both frames.
+11. **`fokusdispel.lua`** — Audits debuff weight matrices based on active class capabilities to shift backdrop border colors.
+12. **`fokusraidicons.lua`** — Scans and crops real-time raid markers onto corresponding corners of both portraits.
+13. **`fokuscore.lua`** — Drives the lightweight background heartbeat update loop, token-remapping, and data-routing.
+14. **`fokuschat.lua`** — Binds system commands (`/fokus`, `/fokusreset`, `/fokushelp`) and logs version pings.
 
 ---
 
@@ -90,17 +92,5 @@ For clean client initialization, your core folder directory path must be named e
 
 1. Ensure **Clique** is updated to map onto external addons if you want direct mouseover click-casting.
 2. Boot into the server environment. Type **`/fokusreset`** to force the layout sandboxes onto your screen (Your system chat frame will confirm authorization with the active version string).
-3. Unlock the yellow wheel icon, adjust your sizing stretch widths, use `/fokusspell` to configure your hot-buttons, and clamp the padlock down red (Locked) to save profiles safely!
 
-
-Internal notes:
-Vi har disse scenarier:
-* scenarie 1: Vi skifter fra (nil) til Player (vinduet skal læse positioner fra saved vars, sætte de nye koordinater og kalde Show)
-* scenarie 2: Vi skifter fra Player til Player - vi skal ingenting gøre: vinduet er jo allerede perfekt.
-* scenarie 3: Vi skifter fra Player til NPC. Vindue skal flyttes til (Y = -10000) og vi kører scenarie 5
-* scenarie 4: Vi skifter fra Player til NIL. Vindue skal flyttes til (Y = -10000)
-* scenarie 5: Vi skifter fra (nil) til NPC. NpcVinduet skal kalde Show
-* scenarie 6: Vi skifter fra NPC til NPC - vi skal ingenging gøre
-* scenarie 7: Vi skifter fra NPC til Player - Vi kalder Hide og kalder scenarie 1
-* scenarie 8: Vi skifter fra NPC til nil - Vi kalder Hide.
 
