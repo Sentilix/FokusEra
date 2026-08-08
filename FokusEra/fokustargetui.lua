@@ -67,7 +67,7 @@ local targetPortBG = FokusTargetFrame:CreateTexture(nil, "BACKGROUND")
 targetPortBG:SetAllPoints(FokusTargetFrame.portrait)
 targetPortBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
--- NEW: Mirrored Raid Target Icon Texture (Placed on top-right corner of the target portrait)
+-- Mirrored Raid Target Icon Texture (Placed on top-right corner of the target portrait)
 FokusTargetFrame.raidIcon = FokusTargetFrame.staticPortrait:CreateTexture(nil, "OVERLAY")
 FokusTargetFrame.raidIcon:SetSize(16, 16)
 FokusTargetFrame.raidIcon:SetPoint("TOPRIGHT", FokusTargetFrame.portrait, "TOPRIGHT", 2, 2)
@@ -92,9 +92,7 @@ FokusTargetFrame.manaBar:SetPoint("TOPLEFT", FokusTargetFrame.hpBar, "BOTTOMLEFT
 FokusTargetFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusTargetFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
--- Register target components into click-cast tracking bridge engines
-ClickCastFrames = ClickCastFrames or {}
-ClickCastFrames[FokusTargetFrame] = true
+-- FIX v1.4.0: Removed ClickCastFrames[FokusTargetFrame] registration to comply with Patch 1.15.9 secure API changes.
 
 -- Hook an alignment enforcement handler onto character profile validation updates
 local targetBootLoader = CreateFrame("Frame")
@@ -103,3 +101,5 @@ targetBootLoader:SetScript("OnEvent", function(self)
     ReanchorTargetFrame()
     targetBootLoader:UnregisterEvent("PLAYER_LOGIN")
 end)
+
+-- fokustgargetui.lua

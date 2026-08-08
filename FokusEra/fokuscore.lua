@@ -128,7 +128,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                     if targetToken == "playertarget" and currentTargetGUID == UnitGUID("player") then
                         renderToken = "player"
                     end
-                    
                     FokusEraTargetFrame.portrait:SetUnit(renderToken)
                     FokusEraTargetFrame.portrait:SetCamera(0)
                     FokusTargetFrame.lastRenderedTargetGUID = currentTargetGUID
@@ -136,12 +135,9 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             end
 
             if FokusEra_UpdateRaidTargetIcon then FokusEra_UpdateRaidTargetIcon(targetToken, FokusEraTargetFrame.raidIcon) end
-            
             FokusEraTargetFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-            
             if not InCombatLockdown() then FokusEraTargetFrame:Show() end
         else
-            -- Safe combat fallback. Clear visuals safely instead of calling .Hide() during active lockdown!
             if InCombatLockdown() then
                 FokusEraTargetFrame.nameText:SetText("")
                 FokusEraTargetFrame.hpBar:SetValue(0)
@@ -201,7 +197,6 @@ function FokusEraNS.FokusEra_ClearGroupFocusLogic()
         
         FokusFrame.lastRenderedGUID = nil; FokusTargetFrame.lastRenderedTargetGUID = nil
         
-        -- Safe combat de-allocation. Clear data footprints and delay visibility hooks if in combat!
         if InCombatLockdown() then
             FokusFrame.nameText:SetText("")
             FokusFrame.hpBar:SetValue(0)
@@ -234,9 +229,7 @@ groupCheckFrame:SetScript("OnEvent", function(self, event)
 
     if FokusEraNS.FokusEra_CT then
         if FokusEraNS.FokusEra_CT == "player" then return end
-
         local targetStillInGroup = false
-        
         if IsInRaid() then
             for i = 1, 40 do
                 if UnitGUID("raid"..i) == FokusEraNS.FokusEra_CurrentGUID then
@@ -255,8 +248,9 @@ groupCheckFrame:SetScript("OnEvent", function(self, event)
         
         if not targetStillInGroup then
             FokusEraNS.FokusEra_ClearGroupFocusLogic()
-            if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
             if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
         end
     end
 end)
+
+-- end fokuscore.lua

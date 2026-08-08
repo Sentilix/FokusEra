@@ -27,7 +27,6 @@ FokusFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 -- FUNCTION: Updates the width of the status bars inside the frame based on current frame width
 function FokusEra_UpdateInternalWidths()
     if InCombatLockdown() then return end
-    
     local newWidth = FokusFrame:GetWidth()
     local barWidth = newWidth - 62 
     FokusFrame.hpBar:SetWidth(barWidth)
@@ -145,15 +144,14 @@ saveLoader:RegisterEvent("PLAYER_LOGIN")
 saveLoader:SetScript("OnEvent", function(self, event)
     if FokusEra_SavedLockState ~= nil then FokusEraNS.FokusEra_IsLocked = FokusEra_SavedLockState
     else FokusEra_SavedLockState = false end
-    
     if FokusEra_OffsetX == nil then FokusEra_OffsetX = 4 end
     if FokusEra_OffsetY == nil then FokusEra_OffsetY = 0 end 
     if FokusEra_Width == nil then FokusEra_Width = 210 end 
-    
     FokusFrame:SetWidth(FokusEra_Width) 
     FokusEra_UpdateInternalWidths() 
-    
     FokusEra_UpdateLockIconColor() 
     if ReanchorTargetFrame then ReanchorTargetFrame() end
     saveLoader:UnregisterEvent("PLAYER_LOGIN")
 end)
+
+-- end fokusui.lua

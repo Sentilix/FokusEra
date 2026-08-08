@@ -42,8 +42,7 @@ SlashCmdList["FOKUS"] = function(msg)
         if UnitGUID("player") == targetGUID then foundToken = "player"
         else
             for i = 1, 4 do
-                local token = "party" .. i
-                if UnitExists(token) and UnitGUID(token) == targetGUID then foundToken = token; break end
+                if UnitGUID("party"..i) == targetGUID then foundToken = "party"..i; break end
             end
         end
     end
@@ -122,11 +121,11 @@ SlashCmdList["FOKUSRESET"] = function(msg)
 end
 
 -- 5. CONSOLE SYSTEM COMMAND: /fokushelp
+-- FIX v1.4.0: Completely removed the /fokusspell line to keep the help interface short and simple.
 local function DisplayInGameHelp()
     print("|cff00ff00------------------ [FokusEra Help] ------------------|r")
     print("|cffffaa00/fokus|r - Sets your currently selected friendly group target to the focus framework (Out of combat).")
     print("|cffffaa00/clearfokus|r - Clears your tracked focus target and completely conceals the frame template.")
-    print("|cffffaa00/fokusspell [Spell Name]|r - Binds an icon automatically to the next free slot (Or use /fokusspell [1-5] [Name]).")
     print("|cffffaa00/fokusreset|r - Resets frame layout screen coordinates safely back to the default bottom-third position.")
     print("|cffffaa00/fokusversion|r - Audits your active party or raid network for current FokusEra installation versions.")
     print("|cffffaa00/fokushelp|r - Prints this console command checklist overview directly onto your local chat frame.")
@@ -139,3 +138,5 @@ SLASH_FOKUSHELP1 = "/fokushelp"
 SlashCmdList["FOKUSHELP"] = function(msg)
     DisplayInGameHelp()
 end
+
+-- end fokuschat.lua

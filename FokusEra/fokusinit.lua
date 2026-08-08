@@ -9,9 +9,8 @@ FokusEraNS.FokusEra_ClearGroupFocusLogic = FokusEraNS.FokusEra_ClearGroupFocusLo
 if FokusEraNS.FokusEra_IsLocked == nil then FokusEraNS.FokusEra_IsLocked = false end
 
 -- Addon configuration references
--- Addon configuration references
 local addonFolderName = "fokusera"
-local addonVersion = C_AddOns.GetAddOnMetadata(addonFolderName, "Version") or "1.3.1"
+local addonVersion = C_AddOns.GetAddOnMetadata(addonFolderName, "Version") or "(Unknown)"
 
 -- Dynamically compiled Title string
 FokusEra_Version = "FokusEra " .. addonVersion
