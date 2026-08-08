@@ -37,7 +37,6 @@ end
 -- MAIN CORE UPDATE ROUTINE (The Quad-Engine Heartbeat)
 -------------------------------------------------------------------------------
 FokusFrame:SetScript("OnUpdate", function(self, elapsed)
-    -- Exit loop if no criteria (Player or NPC) is active anywhere in our memory core
     if not FokusEraNS.FokusEra_CT and not FokusEraNS.FokusEra_NPCGUID then
         if not InCombatLockdown() then
             self:Hide(); FokusEraTargetFrame:Hide(); FokusNPCFrame:Hide(); FokusTargetNPCFrame:Hide()
@@ -47,14 +46,12 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
 
     self.timeSinceLastUpdate = self.timeSinceLastUpdate + elapsed
     if self.timeSinceLastUpdate >= 0.1 then
-        if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+        -- We no longer force full layout geometric re-alignment ticks inside combat loops!
         
         -----------------------------------------------------------------------
         -- ENGINE LAYER A: REGULAR PLAYER FOCUS ROUTINE
         -----------------------------------------------------------------------
         if FokusEraNS.FokusEra_CT then
-            FokusNPCFrame:Hide(); FokusTargetNPCFrame:Hide()
-            
             local token = FokusEraNS.FokusEra_CT
             if not UnitExists(token) or UnitGUID(token) ~= FokusEraNS.FokusEra_CurrentGUID then
                 local remapped = false
@@ -78,9 +75,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             end
 
             if not UnitExists(token) then return end
-            if FokusEra_UpdateInternalWidths then FokusEra_UpdateInternalWidths() end
-
-            self:Show()
 
             self.nameText:SetText(FokusEraNS.FokusEra_CurrentName)
             local level = UnitLevel(token)
@@ -132,7 +126,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                 if FokusEraTargetFrame.portrait and self.lastRenderedTargetGUID ~= UnitGUID(targetToken) then
                     FokusEraTargetFrame.portrait:Show(); FokusEraTargetFrame.portrait:SetUnit(targetToken); FokusEraTargetFrame.portrait:SetCamera(0); self.lastRenderedTargetGUID = UnitGUID(targetToken)
                 end
-                FokusEraTargetFrame:Show()
             else
                 if InCombatLockdown() then FokusEraTargetFrame.nameText:SetText(""); FokusEraTargetFrame.hpBar:SetValue(0) else FokusEraTargetFrame:Hide() end
             end
@@ -141,20 +134,11 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
             -- ENGINE LAYER B: ADVANCED UNIVERSAL NPC / BOSS FOCUS ROUTINE
             -----------------------------------------------------------------------
         elseif FokusEraNS.FokusEra_NPCGUID then
-            self:Show()
-
-            -- SCENARIE 3 & 4 SIKRING: Hvis spiller-rammen er aktiv, dropper vi KUN Y-elevatoren under kamp!
-            if not InCombatLockdown() and FokusFrame:GetBottom() and FokusFrame:GetBottom() > -5000 then 
-                self:ClearAllPoints(); self:SetPoint("CENTER", UIParent, "CENTER", -65, -10000); FokusEraTargetFrame:Hide() 
-            end
+            -- NO MORE RUNTIME SHOW CALL OVERRIDES IN COMBAT UPDATES!
             
             local scanToken = FindValidTokenFromGUID(FokusEraNS.FokusEra_NPCGUID)
-            
             if scanToken then
-                FokusNPCFrame:Show()
                 FokusNPCFrame.nameText:SetText(FokusEraNS.FokusEra_CurrentName)
-                
-                -- FRESH DATA ACQUIRED! Snap the boss health bar back to solid green instantly!
                 FokusNPCFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
                 
                 local level = UnitLevel(scanToken)
@@ -164,7 +148,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                 FokusNPCFrame.hpBar:SetMinMaxValues(0, maxHP); FokusNPCFrame.hpBar:SetValue(currentHP)
                 FokusNPCFrame.hpText:SetText(currentHP .. " / " .. maxHP)
                 
-                -- NEW v1.4.0: Class Color Mapping handler for Enemy Faction Players (Horde Rogues!)
                 local _, scanClass = UnitClass(scanToken)
                 if UnitIsPlayer(scanToken) and scanClass and RAID_CLASS_COLORS[scanClass] then
                     local c = RAID_CLASS_COLORS[scanClass]; FokusNPCFrame.nameText:SetTextColor(c.r, c.g, c.b)
@@ -186,7 +169,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                     FokusNPCFrame.portrait:Show(); FokusNPCFrame.portrait:SetUnit(scanToken); FokusNPCFrame.portrait:SetCamera(0); self.lastRenderedGUID = FokusEraNS.FokusEra_NPCGUID
                 end
                 
-                -- NEW v1.4.0: Inject live Raid Marker tracking overlays onto the Boss frame canvas
                 if FokusEra_UpdateRaidTargetIcon then 
                     FokusEra_UpdateRaidTargetIcon(scanToken, FokusNPCFrame.raidIcon) 
                 end
@@ -220,7 +202,6 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                         FokusTargetNPCFrame.portrait:Show(); FokusTargetNPCFrame.portrait:SetUnit(bossTargetToken); FokusTargetNPCFrame.portrait:SetCamera(0); self.lastRenderedTargetGUID = currentBTGUID
                     end
                     
-                    -- NEW v1.4.0: Inject live Raid Marker tracking overlays onto the Boss Target frame canvas
                     if FokusEra_UpdateRaidTargetIcon then 
                         FokusEra_UpdateRaidTargetIcon(bossTargetToken, FokusTargetNPCFrame.raidIcon) 
                     end
@@ -228,9 +209,8 @@ FokusFrame:SetScript("OnUpdate", function(self, elapsed)
                     FokusTargetNPCFrame:Hide()
                 end
             else
-                FokusNPCFrame:Show()
                 FokusNPCFrame.nameText:SetText(FokusEraNS.FokusEra_CurrentName)
-                FokusNPCFrame.hpBar:SetStatusBarColor(1, 0.82, 0) -- Solid amber yellow indicators
+                FokusNPCFrame.hpBar:SetStatusBarColor(1, 0.82, 0) -- Amber warning colors
                 FokusTargetNPCFrame:Hide()
             end
         end
@@ -266,7 +246,7 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
             end
             print("|cff00ff00[FokusEra]|r Friendly Player Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
             
-            -- SCENARIE 1: NIL -> PLAYER (Pull elevator back, reset center alignment hooks)
+            -- SCENARIE 1: NIL -> PLAYER (Pull elevator back cleanly)
             -- SCENARIE 7: NPC -> PLAYER (Trigger Hide on NPC panel, execute Scenario 1 elevator reset)
             if previousState == "NIL" or previousState == "NPC" then
                 if previousState == "NPC" then FokusNPCFrame:Hide(); FokusTargetNPCFrame:Hide() end
@@ -291,7 +271,7 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
             FokusFrame:SetAttribute("unit", nil); FokusFrame:SetAttribute("*unit", nil)
             print("|cff00ff00[FokusEra]|r Combat NPC/Boss Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
             
-            -- SCENARIE 3: PLAYER -> NPC (Drop Y-elevator to de-activate Clique clicks, then fire Scenario 5)
+            -- SCENARIE 3: PLAYER -> NPC (Drop Y-elevator to de-activate clicks relative to shadow frame center!)
             if previousState == "PLAYER" then
                 if not InCombatLockdown() then
                     FokusFrame:ClearAllPoints()
@@ -300,15 +280,15 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
                 end
             end
             
-            -- SCENARIE 5: NIL -> NPC (Call Show on the non-secure Boss frame skaller)
-            -- SCENARIE 6: NPC -> NPC (Do absolutely nothing, layouts are already operational)
-            FokusFrame:Show() -- Main frame heartbeat driver container must be kept active
+            -- SCENARIE 4 & 5: Anchor secure template and NPC skaller straight to our single source of truth shadow frame!
+            FokusFrame:Show() 
             FokusNPCFrame:Show()
+            if FokusTargetNPCFrame then FokusTargetNPCFrame:Hide() end
             if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
             FokusTargetFrame:Hide()
         end
         
-        FokusEraNS.CurrentFocusState = nextState -- Save the current transition profile state
+        FokusEraNS.CurrentFocusState = nextState 
         FokusFrame.lastRenderedGUID = nil
         FokusTargetFrame.lastRenderedTargetGUID = nil 
         if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
@@ -334,7 +314,7 @@ function FokusEraNS.FokusEra_ClearGroupFocusLogic()
         
         FokusFrame.lastRenderedGUID = nil; FokusTargetFrame.lastRenderedTargetGUID = nil
         
-        -- SCENARIE 4: PLAYER -> NIL (Drop Y-elevator to de-activate clicks safely out of sight)
+        -- SCENARIE 4: PLAYER -> NIL (Drop Y-elevator out of sight relative to shadow root center!)
         if previousState == "PLAYER" then
             if not InCombatLockdown() then
                 FokusFrame:ClearAllPoints()
@@ -342,7 +322,7 @@ function FokusEraNS.FokusEra_ClearGroupFocusLogic()
             end
         end
         
-        -- SCENARIE 8: NPC -> NIL (Trigger Hide and collapse all non-secure layout blocks instantly)
+        -- SCENARIE 8: NPC -> NIL (Trigger Hide and collapse non-secure layout blocks instantly)
         if InCombatLockdown() then
             FokusFrame.nameText:SetText(""); FokusFrame.hpBar:SetValue(0)
             FokusNPCFrame.nameText:SetText(""); FokusNPCFrame.hpBar:SetValue(0)

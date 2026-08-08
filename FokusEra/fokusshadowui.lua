@@ -8,15 +8,14 @@ FokusShadowFrame:SetMovable(true)
 FokusShadowFrame:EnableMouse(true)
 FokusShadowFrame:Show()
 
--- DESIGN: Semi-transparent dark green backdrop indicator layer exclusively for layout testing
+-- FIX v1.4.0: 100% TRANSPARENT BALANCING!
+-- Removed the green test background and border entirely. The shadow frame is now completely invisible!
 FokusShadowFrame:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 8, edgeSize = 12,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    bgFile = nil,
+    edgeFile = nil,
+    tile = false, tileSize = 0, edgeSize = 0,
+    insets = { left = 0, right = 0, top = 0, bottom = 0 }
 })
-FokusShadowFrame:SetBackdropColor(0.1, 0.4, 0.1, 0.25) -- 75% transparent green (Alpha = 0.25)
-FokusShadowFrame:SetBackdropBorderColor(0.2, 0.8, 0.2, 0.4)
 
 -- Move handling: Dragging either active focus frame shifts the shadow root layer instead!
 FokusShadowFrame:RegisterForDrag("LeftButton")
@@ -29,30 +28,37 @@ end)
 FokusShadowFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
     if not InCombatLockdown() then
-        -- Grab the precise absolute coordinates mapping from the screen center topology
-        local mainX, mainY = self:GetCenter()
-        local parentX, parentY = UIParent:GetCenter()
-        if mainX and mainY and parentX and parentY then
-            FokusEra_OffsetX = math.floor(mainX - parentX)
-            FokusEra_OffsetY = math.floor(mainY - parentY)
-        end
+        -- Save pure, absolute raw screen pixels from BOTTOMLEFT to eliminate center math drift forever!
+        FokusEra_ShadowX = math.floor(self:GetLeft())
+        FokusEra_ShadowY = math.floor(self:GetBottom())
     end
-    -- Dynamically trigger alignment updates across all active sub-frame modules inline
+    -- Trigger chained domino update across layout alignment engines
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
 
--- INITIALIZATION LIFECYCLE ROUTINE
+-- MASTER LIFECYCLE GATE PIPELINE (PLAYER_ENTERING_WORLD)
 local shadowLoader = CreateFrame("Frame")
-shadowLoader:RegisterEvent("PLAYER_LOGIN")
-shadowLoader:SetScript("OnEvent", function(self)
-    if FokusEra_OffsetX == nil then FokusEra_OffsetX = -65 end
-    if FokusEra_OffsetY == nil then FokusEra_OffsetY = -150 end
+shadowLoader:RegisterEvent("PLAYER_ENTERING_WORLD")
+shadowLoader:SetScript("OnEvent", function(self, event)
+    -- Fallback positions matching original UI placement catalog geometry if no saved vars exist
+    if FokusEra_ShadowX == nil then FokusEra_ShadowX = math.floor((GetScreenHeight() / 2) - 105) end
+    if FokusEra_ShadowY == nil then FokusEra_ShadowY = math.floor((GetScreenHeight() / 3) - 24) end
     
-    -- Snap the shadow anchor to your exact saved configurations immediately on boot
+    -- Absolute urokkelig bund-forankring, der er immun over for Blizzards midlertidige center-hukommelsestab!
     FokusShadowFrame:ClearAllPoints()
-    FokusShadowFrame:SetPoint("CENTER", UIParent, "CENTER", FokusEra_OffsetX, FokusEra_OffsetY)
+    FokusShadowFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
     
-    shadowLoader:UnregisterEvent("PLAYER_LOGIN")
+    -- Fire up layout domino chains explicitly to lock structures oven på skyggerammen
+    if FokusFrame and FokusFrame:GetWidth() then
+        FokusFrame:ClearAllPoints()
+        FokusFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, 0)
+    end
+    
+    if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
+    
+    shadowLoader:UnregisterEvent("PLAYER_ENTERING_WORLD")
 end)
 
 -- end fokusshadowui.lua
