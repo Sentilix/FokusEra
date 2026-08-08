@@ -9,6 +9,8 @@ FokusFrame = FokusEraFrame
 FokusFrame:SetSize(210, 48)
 FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
 FokusFrame:SetMovable(false) 
+FokusFrame:SetResizable(true) -- Flag set during frame birth
+FokusFrame:SetResizeBounds(160, 48, 400, 48)
 FokusFrame:EnableMouse(true)
 FokusFrame:RegisterForClicks("AnyUp")
 FokusFrame:Hide()
@@ -41,9 +43,6 @@ FokusFrame:SetScript("OnDragStart", function(self)
     if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then
         FokusShadowFrame:StartMoving()
         
-        -- FIX v1.4.0: LIVE DRAG ENGINE TERNED ON!
-        -- Forces a lightweight heartbeat to bind the active visible frames directly onto the mouse position 
-        -- dynamically as you drag it across your screen, preventing any visual ghost lagging!
         FokusShadowFrame:SetScript("OnUpdate", function()
             local sLeft = FokusShadowFrame:GetLeft()
             local sBottom = FokusShadowFrame:GetBottom()
@@ -58,7 +57,6 @@ FokusFrame:SetScript("OnDragStart", function(self)
 end)
 
 FokusFrame:SetScript("OnDragStop", function(self)
-    -- Kill the temporary real-time update loop immediately to completely save CPU cycles
     FokusShadowFrame:SetScript("OnUpdate", nil)
     FokusShadowFrame:StopMovingOrSizing()
     
@@ -69,7 +67,6 @@ FokusFrame:SetScript("OnDragStop", function(self)
         FokusFrame:ClearAllPoints()
         FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
     end
-    -- Final secure anchoring refresh
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
@@ -162,8 +159,10 @@ FokusFrame.resizeBtn.tex = FokusFrame.resizeBtn:CreateTexture(nil, "OVERLAY")
 FokusFrame.resizeBtn.tex:SetAllPoints()
 FokusFrame.resizeBtn.tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
 
+-- FIX v1.4.0: Explicitly re-enforce the resizable flag state state right before triggering Blizzard's StartSizing API core block!
 FokusFrame.resizeBtn:SetScript("OnMouseDown", function(self, button)
     if button == "LeftButton" and not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked then
+        FokusFrame:SetResizable(true)
         FokusFrame:StartSizing("RIGHT") 
     end
 end)

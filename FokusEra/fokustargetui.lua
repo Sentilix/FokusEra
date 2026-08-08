@@ -1,16 +1,21 @@
 -- Catch the shared addon namespace parameter from the WoW engine
 local addonName, FokusEraNS = ...
 
--- Global frame names unified with the K format
-FokusEraTargetFrame = CreateFrame("Button", "FokusEraTargetFrame", FokusFrame, "SecureUnitButtonTemplate, BackdropTemplate")
+-- UNIFIED GLOBAL NAMING Blueprints
+FokusEraTargetFrame = CreateFrame("Button", "FokusEraTargetFrame", UIParent, "SecureUnitButtonTemplate, BackdropTemplate")
 FokusTargetFrame = FokusEraTargetFrame
 
--- FOCUS TARGET FRAME DESIGN (Width 170)
+-- MAIN TARGET FRAME DESIGN (Width defaults to 170, Height: 48)
 FokusTargetFrame:SetSize(170, 48)
-FokusTargetFrame:SetMovable(true) 
+FokusTargetFrame:SetMovable(false)
+FokusTargetFrame:SetResizable(true) 
+FokusTargetFrame:SetResizeBounds(120, 48, 400, 48) 
 FokusTargetFrame:EnableMouse(true)
 FokusTargetFrame:RegisterForClicks("AnyUp")
 FokusTargetFrame:Hide()
+
+FokusTargetFrame:SetFrameStrata("DIALOG")
+FokusTargetFrame:SetFrameLevel(20)
 
 FokusTargetFrame:SetBackdrop({
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -21,85 +26,129 @@ FokusTargetFrame:SetBackdrop({
 FokusTargetFrame:SetBackdropColor(0, 0, 0, 0.85)
 FokusTargetFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 
--- FUNCTION: Dynamically anchors the target frame relative to the main frame
-function ReanchorTargetFrame()
-    FokusTargetFrame:ClearAllPoints()
-    FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
+-- FUNCTION: Updates the internal width profiles of the status bars dynamically
+function FokusTarget_UpdateInternalWidths()
+    if InCombatLockdown() then return end
+    local newWidth = FokusTargetFrame:GetWidth()
+    local barWidth = newWidth - 56 
+    FokusTargetFrame.hpBar:SetWidth(barWidth)
+    FokusTargetFrame.manaBar:SetWidth(barWidth)
 end
 
--- ADVANCED DRAG SCRIPT: "ALIGN TO GRID" WITH BALANCED MAGNET SNAP
-FokusTargetFrame:RegisterForDrag("LeftButton")
-FokusTargetFrame:SetScript("OnDragStart", function(self) 
-    if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then self:StartMoving() end 
-end)
-
-FokusTargetFrame:SetScript("OnDragStop", function(self) 
-    self:StopMovingOrSizing()
-    
-    local mainX, mainY = FokusFrame:GetCenter()
-    local targetX, targetY = self:GetCenter()
-    
-    if mainX and mainY and targetX and targetY then
-        local currentMainWidth = FokusFrame:GetWidth() 
-        local rawX = math.floor(targetX - mainX - (currentMainWidth / 2) - (170 / 2)) 
-        local rawY = math.floor(targetY - mainY)
-        
-        if math.abs(rawY - (0)) <= 10 then rawY = 0 end 
-        
-        FokusEra_OffsetX = rawX
-        FokusEra_OffsetY = rawY
-        
-        ReanchorTargetFrame()
-    end
-end)
-
--- Mirrored Target Portrait configuration (Anchored to upper-right bounds)
+-- Right-anchored mirrored portrait configuration
 FokusTargetFrame.staticPortrait = CreateFrame("Frame", nil, FokusTargetFrame)
 FokusTargetFrame.portrait = CreateFrame("PlayerModel", nil, FokusTargetFrame)
 FokusTargetFrame.portrait:SetSize(40, 38)
 FokusTargetFrame.portrait:SetPoint("TOPRIGHT", FokusTargetFrame, "TOPRIGHT", -6, -5)
 
-FokusTargetFrame.portrait:SetScript("OnModelLoaded", function(self)
-    self:SetCamera(0) 
-end)
+local portBG = FokusTargetFrame:CreateTexture(nil, "BACKGROUND")
+portBG:SetAllPoints(FokusTargetFrame.portrait)
+portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
-local targetPortBG = FokusTargetFrame:CreateTexture(nil, "BACKGROUND")
-targetPortBG:SetAllPoints(FokusTargetFrame.portrait)
-targetPortBG:SetColorTexture(0.05, 0.05, 0.05, 1)
+-- Master Target Icon Overlay Frame Container
+FokusTargetFrame.iconOverlay = CreateFrame("Frame", nil, FokusTargetFrame)
+FokusTargetFrame.iconOverlay:SetAllPoints(FokusTargetFrame)
+FokusTargetFrame.iconOverlay:SetFrameStrata("DIALOG")
+FokusTargetFrame.iconOverlay:SetFrameLevel(FokusTargetFrame:GetFrameLevel() + 5)
+FokusTargetFrame.iconOverlay:EnableMouse(false)
+if FokusTargetFrame.iconOverlay.SetMouseClickEnabled then FokusTargetFrame.iconOverlay:SetMouseClickEnabled(false) end
 
--- Mirrored Raid Target Icon Texture (Placed on top-right corner of the target portrait)
-FokusTargetFrame.raidIcon = FokusTargetFrame.staticPortrait:CreateTexture(nil, "OVERLAY")
-FokusTargetFrame.raidIcon:SetSize(16, 16)
-FokusTargetFrame.raidIcon:SetPoint("TOPRIGHT", FokusTargetFrame.portrait, "TOPRIGHT", 2, 2)
+-- Raid Target Mark Anchor
+FokusTargetFrame.raidIcon = FokusTargetFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
+FokusTargetFrame.raidIcon:SetSize(14, 14)
+FokusTargetFrame.raidIcon:SetPoint("TOPRIGHT", FokusTargetFrame, "TOPRIGHT", -2, -1)
 FokusTargetFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 FokusTargetFrame.raidIcon:Hide()
 
--- Target Frame Text & Health Bar Elements (Mirrored configuration boundaries)
+-- Text row geometries
 FokusTargetFrame.nameText = FokusTargetFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 FokusTargetFrame.nameText:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -6)
-FokusTargetFrame.nameText:SetSize(114, 12)
 FokusTargetFrame.nameText:SetJustifyH("LEFT")
 
+-- Target Health Bar
 FokusTargetFrame.hpBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
-FokusTargetFrame.hpBar:SetSize(114, 14) 
+FokusTargetFrame.hpBar:SetSize(114, 14)
 FokusTargetFrame.hpBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -18)
 FokusTargetFrame.hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
 
+-- Target Power Bar / Mana
 FokusTargetFrame.manaBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
-FokusTargetFrame.manaBar:SetSize(114, 6) 
-FokusTargetFrame.manaBar:SetPoint("TOPLEFT", FokusTargetFrame.hpBar, "BOTTOMLEFT", 0, -2)
+FokusTargetFrame.manaBar:SetSize(114, 6)
+FokusTargetFrame.manaBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -34)
 FokusTargetFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusTargetFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
--- FIX v1.4.0: Removed ClickCastFrames[FokusTargetFrame] registration to comply with Patch 1.15.9 secure API changes.
+-- INTERACTIVE RESIZE FRAME (FIX v1.4.0: Built in the absolute top TOOLTIP layer to break 3D depth!)
+FokusTargetResizeFrame = CreateFrame("Button", "FokusTargetResizeFrame", UIParent)
+FokusTargetResizeFrame:SetSize(12, 12)
+FokusTargetResizeFrame:SetFrameStrata("TOOLTIP") -- Absolute forward layer fortress
+FokusTargetResizeFrame:SetFrameLevel(100)
+FokusTargetResizeFrame:Hide()
 
--- Hook an alignment enforcement handler onto character profile validation updates
-local targetBootLoader = CreateFrame("Frame")
-targetBootLoader:RegisterEvent("PLAYER_LOGIN")
-targetBootLoader:SetScript("OnEvent", function(self)
+FokusTargetResizeFrame.tex = FokusTargetResizeFrame:CreateTexture(nil, "OVERLAY")
+FokusTargetResizeFrame.tex:SetAllPoints()
+FokusTargetResizeFrame.tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+
+FokusTargetFrame.resizeBtn = FokusTargetResizeFrame -- Map references to clear out errors
+
+FokusTargetResizeFrame:SetScript("OnMouseDown", function(self, button)
+    if button == "LeftButton" and not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked then
+        FokusTargetFrame:SetResizable(true)
+        FokusTargetFrame:StartSizing("RIGHT")
+        
+        -- Live synchronization loop to dynamically scale layouts smoothly
+        FokusTargetResizeFrame:SetScript("OnUpdate", function()
+            if not InCombatLockdown() then
+                FokusTarget_UpdateInternalWidths()
+            end
+        end)
+    end
+end)
+
+FokusTargetResizeFrame:SetScript("OnMouseUp", function(self, button)
+    FokusTargetResizeFrame:SetScript("OnUpdate", nil)
+    FokusTargetFrame:StopMovingOrSizing()
+    FokusEra_TargetWidth = FokusTargetFrame:GetWidth() 
+    FokusTarget_UpdateInternalWidths()
+end)
+
+-- GLOBAL MAGNET-SNAP ALIGNMENT ENGINE
+function ReanchorTargetFrame()
+    if InCombatLockdown() or not FokusFrame or not FokusTargetFrame then return end
+    
+    if FokusEra_TargetWidth == nil then FokusEra_TargetWidth = 170 end
+    FokusTargetFrame:SetWidth(FokusEra_TargetWidth)
+    FokusTarget_UpdateInternalWidths()
+    
+    -- Sync the loose floating tooltip resize arrow onto the absolute corner of the frame
+    FokusTargetResizeFrame:ClearAllPoints()
+    FokusTargetResizeFrame:SetPoint("BOTTOMRIGHT", FokusTargetFrame, "BOTTOMRIGHT", -2, 2)
+    
+    if FokusEraNS.FokusEra_IsLocked then
+        FokusTargetResizeFrame:Hide()
+    else
+        if FokusTargetFrame:IsShown() then FokusTargetResizeFrame:Show() else FokusTargetResizeFrame:Hide() end
+    end
+    
+    FokusTargetFrame:ClearAllPoints()
+    if FokusEra_OffsetX and FokusEra_OffsetY then
+        FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
+    else
+        FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", 4, 0)
+    end
+end
+
+-- Hook visibility routines to ensure the floating handle collapses correctly
+FokusTargetFrame:HookScript("OnShow", function() if not FokusEraNS.FokusEra_IsLocked then FokusTargetResizeFrame:Show() end end)
+FokusTargetFrame:HookScript("OnHide", function() FokusTargetResizeFrame:Hide() end)
+
+-- INITIALIZATION PROFILE LOADING ON BOOT
+local targetLoader = CreateFrame("Frame")
+targetLoader:RegisterEvent("PLAYER_LOGIN")
+targetLoader:SetScript("OnEvent", function(self)
     ReanchorTargetFrame()
-    targetBootLoader:UnregisterEvent("PLAYER_LOGIN")
+    targetLoader:UnregisterEvent("PLAYER_LOGIN")
 end)
 
 -- fokustgargetui.lua
