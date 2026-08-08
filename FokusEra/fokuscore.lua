@@ -224,36 +224,54 @@ FokusEraNS.CurrentFocusState = "NIL"
 function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
     if InCombatLockdown() then return end
     if unitToken and FokusFrame and FokusShadowFrame then
-        local rawGUID = UnitGUID(unitToken)
-        FokusEraNS.FokusEra_CurrentGUID = rawGUID
-        FokusEraNS.FokusEra_CurrentName = UnitName(unitToken)
+        -- Catch forced non-group player overrides string sequences cleanly
+        local actualToken = unitToken
+        local isForcedNPC = false
+        if unitToken == "target_npc_override" then
+            actualToken = "target"
+            isForcedNPC = true
+        end
+
+        -- Defend against nil exceptions by providing safe engine fallbacks
+        local rawGUID = UnitGUID(actualToken) or "0x0"
+        local rawName = UnitName(actualToken) or "Unknown Entity"
         
-        local nextState = UnitIsPlayer(unitToken) and "PLAYER" or "NPC"
+        FokusEraNS.FokusEra_CurrentGUID = rawGUID
+        FokusEraNS.FokusEra_CurrentName = rawName
+        
+        -- Route entity to PLAYER only if it's a Player AND not explicitly forced to NPC shell
+        local nextState = (UnitIsPlayer(actualToken) and not isForcedNPC) and "PLAYER" or "NPC"
         local previousState = FokusEraNS.CurrentFocusState
         
         if nextState == "PLAYER" then
-            FokusEraNS.FokusEra_CT = unitToken
+            FokusEraNS.FokusEra_CT = actualToken
             FokusEraNS.FokusEra_NPCGUID = nil 
             
-            FokusFrame.unit = unitToken
-            FokusFrame:SetAttribute("unit", unitToken)
-            FokusFrame:SetAttribute("*unit", unitToken)
+            FokusFrame.unit = actualToken
+            FokusFrame:SetAttribute("unit", actualToken)
+            FokusFrame:SetAttribute("*unit", actualToken)
             
             if FokusTargetFrame then
-                FokusTargetFrame.unit = unitToken .. "target"
-                FokusTargetFrame:SetAttribute("unit", unitToken .. "target")
-                FokusTargetFrame:SetAttribute("*unit", unitToken .. "target")
+                FokusTargetFrame.unit = actualToken .. "target"
+                FokusTargetFrame:SetAttribute("unit", actualToken .. "target")
+                FokusTargetFrame:SetAttribute("*unit", actualToken .. "target")
             end
             print("|cff00ff00[FokusEra]|r Friendly Player Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
             
-            -- SCENARIE 1: NIL -> PLAYER (Pull elevator back cleanly)
-            -- SCENARIE 7: NPC -> PLAYER (Trigger Hide on NPC panel, execute Scenario 1 elevator reset)
+            -- SCENARIE 1 & 7: Pull player frame elevator back cleanly onto absolute screen coordinates!
+            -- FIX v1.4.0: Anchored exclusively to UIParent to eliminate secure mouse-hit detection taints!
             if previousState == "NIL" or previousState == "NPC" then
                 if previousState == "NPC" then FokusNPCFrame:Hide(); FokusTargetNPCFrame:Hide() end
                 
                 if not InCombatLockdown() then
                     FokusFrame:ClearAllPoints()
-                    FokusFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, 0)
+                    local shadowLeft = FokusShadowFrame:GetLeft()
+                    local shadowBottom = FokusShadowFrame:GetBottom()
+                    if shadowLeft and shadowBottom then
+                        FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, shadowBottom)
+                    else
+                        FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
+                    end
                 end
             end
             -- SCENARIE 2: PLAYER -> PLAYER (Do absolutely nothing to the layout anchors)
@@ -271,16 +289,21 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
             FokusFrame:SetAttribute("unit", nil); FokusFrame:SetAttribute("*unit", nil)
             print("|cff00ff00[FokusEra]|r Combat NPC/Boss Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
             
-            -- SCENARIE 3: PLAYER -> NPC (Drop Y-elevator to de-activate clicks relative to shadow frame center!)
+            -- SCENARIE 3: PLAYER -> NPC (Drop Y-elevator relative to UIParent center topology)
             if previousState == "PLAYER" then
                 if not InCombatLockdown() then
                     FokusFrame:ClearAllPoints()
-                    FokusFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, -10000)
+                    local shadowLeft = FokusShadowFrame:GetLeft()
+                    if shadowLeft then
+                        FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, -10000)
+                    else
+                        FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -10000)
+                    end
                     if FokusEraTargetFrame then FokusEraTargetFrame:Hide() end
                 end
             end
             
-            -- SCENARIE 4 & 5: Anchor secure template and NPC skaller straight to our single source of truth shadow frame!
+            -- SCENARIE 4 & 5: Anchor NPC skaller straight to our single source of truth shadow frame
             FokusFrame:Show() 
             FokusNPCFrame:Show()
             if FokusTargetNPCFrame then FokusTargetNPCFrame:Hide() end
@@ -305,24 +328,31 @@ function FokusEraNS.FokusEra_ClearGroupFocusLogic()
     
     if FokusFrame then
         FokusFrame.unit = nil
-        FokusFrame:SetAttribute("unit", nil); FokusFrame:SetAttribute("*unit", nil)
+        FokusFrame:SetAttribute("unit", nil)
+        FokusFrame:SetAttribute("*unit", nil)
         
         if FokusTargetFrame then
             FokusTargetFrame.unit = nil
-            FokusTargetFrame:SetAttribute("unit", nil); FokusTargetFrame:SetAttribute("*unit", nil)
+            FokusTargetFrame:SetAttribute("unit", nil)
+            FokusTargetFrame:SetAttribute("*unit", nil)
         end
         
         FokusFrame.lastRenderedGUID = nil; FokusTargetFrame.lastRenderedTargetGUID = nil
         
-        -- SCENARIE 4: PLAYER -> NIL (Drop Y-elevator out of sight relative to shadow root center!)
+        -- SCENARIE 4: PLAYER -> NIL (Drop Y-elevator out of sight relative to UIParent)
         if previousState == "PLAYER" then
             if not InCombatLockdown() then
                 FokusFrame:ClearAllPoints()
-                FokusFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, -10000)
+                local shadowLeft = FokusShadowFrame:GetLeft()
+                if shadowLeft then
+                    FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, -10000)
+                else
+                    FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -10000)
+                end
             end
         end
         
-        -- SCENARIE 8: NPC -> NIL (Trigger Hide and collapse non-secure layout blocks instantly)
+        -- SCENARIE 8: NPC -> NIL (Trigger Hide and collapse layouts instantly)
         if InCombatLockdown() then
             FokusFrame.nameText:SetText(""); FokusFrame.hpBar:SetValue(0)
             FokusNPCFrame.nameText:SetText(""); FokusNPCFrame.hpBar:SetValue(0)

@@ -13,6 +13,11 @@ FokusFrame:EnableMouse(true)
 FokusFrame:RegisterForClicks("AnyUp")
 FokusFrame:Hide()
 
+-- FIX v1.4.0: THE DIALOG STRATA FORTRESS!
+-- Shoots the secure frame completely over WeakAuras, shadow frames, and screen clutter to force click capture!
+FokusFrame:SetFrameStrata("DIALOG")
+FokusFrame:SetFrameLevel(20)
+
 FokusFrame:SetBackdrop({
     bgFile = "Interface\\Buttons\\WHITE8X8",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -62,8 +67,10 @@ portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 -- Master NPC Icon Overlay Frame Container
 FokusFrame.iconOverlay = CreateFrame("Frame", nil, FokusFrame)
 FokusFrame.iconOverlay:SetAllPoints(FokusFrame)
-FokusFrame.iconOverlay:SetFrameStrata("MEDIUM")
-FokusFrame.iconOverlay:SetFrameLevel(FokusFrame.portrait:GetFrameLevel() + 10)
+FokusFrame.iconOverlay:SetFrameStrata("DIALOG")
+FokusFrame.iconOverlay:SetFrameLevel(FokusFrame:GetFrameLevel() + 5)
+FokusFrame.iconOverlay:EnableMouse(false)
+if FokusFrame.iconOverlay.SetMouseClickEnabled then FokusFrame.iconOverlay:SetMouseClickEnabled(false) end
 
 -- Portrait Texture Overlay Anchors (Raid Mark stays clean on the top edge)
 FokusFrame.raidIcon = FokusFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
@@ -72,12 +79,11 @@ FokusFrame.raidIcon:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 2, -1)
 FokusFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 FokusFrame.raidIcon:Hide()
 
--- Swapped to the pure classic spell_holy_heal texture icon file asset
+-- Swapped to the pure classic spell_holy_heal texture icon file asset with border crop
 FokusFrame.statusIcon = FokusFrame:CreateTexture(nil, "OVERLAY")
 FokusFrame.statusIcon:SetSize(10, 10)
 FokusFrame.statusIcon:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -6)
 FokusFrame.statusIcon:SetTexture("Interface\\Icons\\spell_holy_heal") 
--- FIX v1.4.0: Zoom texture coordinates by 7% on each side to cleanly shave off Blizzard's default black borders!
 FokusFrame.statusIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 FokusFrame.statusIcon:Show() 
 
@@ -103,7 +109,7 @@ FokusFrame.hpText:SetPoint("CENTER", FokusFrame.hpBar, "CENTER", 0, 0)
 -- Main Power Bar / Mana
 FokusFrame.manaBar = CreateFrame("StatusBar", nil, FokusFrame)
 FokusFrame.manaBar:SetSize(148, 6) 
-FokusFrame.manaBar:SetPoint("TOPLEFT", FokusFrame.hpBar, "BOTTOMLEFT", 0, -2)
+FokusFrame.manaBar:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -34)
 FokusFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusFrame.manaBar:SetStatusBarColor(0, 0, 1)
 

@@ -8,12 +8,9 @@ FokusShadowFrame:SetMovable(true)
 FokusShadowFrame:EnableMouse(true)
 FokusShadowFrame:Show()
 
--- FIX v1.4.0: 100% TRANSPARENT BALANCING!
--- Removed the green test background and border entirely. The shadow frame is now completely invisible!
+-- MASTER TRANSPARENT VIEWPORT BALANCING
 FokusShadowFrame:SetBackdrop({
-    bgFile = nil,
-    edgeFile = nil,
-    tile = false, tileSize = 0, edgeSize = 0,
+    bgFile = nil, edgeFile = nil, tile = false, tileSize = 0, edgeSize = 0,
     insets = { left = 0, right = 0, top = 0, bottom = 0 }
 })
 
@@ -28,11 +25,9 @@ end)
 FokusShadowFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
     if not InCombatLockdown() then
-        -- Save pure, absolute raw screen pixels from BOTTOMLEFT to eliminate center math drift forever!
         FokusEra_ShadowX = math.floor(self:GetLeft())
         FokusEra_ShadowY = math.floor(self:GetBottom())
     end
-    -- Trigger chained domino update across layout alignment engines
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
@@ -41,19 +36,15 @@ end)
 local shadowLoader = CreateFrame("Frame")
 shadowLoader:RegisterEvent("PLAYER_ENTERING_WORLD")
 shadowLoader:SetScript("OnEvent", function(self, event)
-    -- Fallback positions matching original UI placement catalog geometry if no saved vars exist
     if FokusEra_ShadowX == nil then FokusEra_ShadowX = math.floor((GetScreenHeight() / 2) - 105) end
     if FokusEra_ShadowY == nil then FokusEra_ShadowY = math.floor((GetScreenHeight() / 3) - 24) end
     
-    -- Absolute urokkelig bund-forankring, der er immun over for Blizzards midlertidige center-hukommelsestab!
+    -- Absolute urokkelig bund-forankring for skyggen per karakter
     FokusShadowFrame:ClearAllPoints()
     FokusShadowFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
     
-    -- Fire up layout domino chains explicitly to lock structures oven på skyggerammen
-    if FokusFrame and FokusFrame:GetWidth() then
-        FokusFrame:ClearAllPoints()
-        FokusFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, 0)
-    end
+    -- FIX v1.4.0: Vi rører OVERHOVEDET ikke ved FokusFrame under opstarten! 
+    -- Dens klik-areal forbliver snorlige og urokkeligt, nøjagtig som i Version 1.3.0!
     
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     if ReanchorTargetFrame then ReanchorTargetFrame() end

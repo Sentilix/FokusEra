@@ -33,6 +33,9 @@ FokusNPCFrame.iconOverlay = CreateFrame("Frame", nil, FokusNPCFrame)
 FokusNPCFrame.iconOverlay:SetAllPoints(FokusNPCFrame)
 FokusNPCFrame.iconOverlay:SetFrameStrata("MEDIUM")
 FokusNPCFrame.iconOverlay:SetFrameLevel(FokusNPCFrame.portrait:GetFrameLevel() + 10)
+-- FIX v1.4.0: DISABLE MOUSE INTERACTION ON BOSS OVERLAY
+FokusNPCFrame.iconOverlay:EnableMouse(false)
+if FokusNPCFrame.iconOverlay.SetMouseClickEnabled then FokusNPCFrame.iconOverlay:SetMouseClickEnabled(false) end
 
 -- NPC Portrait Icon Textures
 FokusNPCFrame.raidIcon = FokusNPCFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
@@ -41,7 +44,6 @@ FokusNPCFrame.raidIcon:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 2, -1)
 FokusNPCFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 FokusNPCFrame.raidIcon:Hide()
 
--- FIX v1.4.0: Shifted Y-offset to -6 for absolute text alignment matching
 FokusNPCFrame.statusIcon = FokusNPCFrame:CreateTexture(nil, "OVERLAY")
 FokusNPCFrame.statusIcon:SetSize(10, 10)
 FokusNPCFrame.statusIcon:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 52, -6)
@@ -119,6 +121,9 @@ FokusTargetNPCFrame.iconOverlay = CreateFrame("Frame", nil, FokusTargetNPCFrame)
 FokusTargetNPCFrame.iconOverlay:SetAllPoints(FokusTargetNPCFrame)
 FokusTargetNPCFrame.iconOverlay:SetFrameStrata("MEDIUM")
 FokusTargetNPCFrame.iconOverlay:SetFrameLevel(FokusTargetNPCFrame.portrait:GetFrameLevel() + 10)
+-- FIX v1.4.0: DISABLE MOUSE INTERACTION ON BOSS TARGET OVERLAY
+FokusTargetNPCFrame.iconOverlay:EnableMouse(false)
+if FokusTargetNPCFrame.iconOverlay.SetMouseClickEnabled then FokusTargetNPCFrame.iconOverlay:SetMouseClickEnabled(false) end
 
 -- Target NPC Raid Mark Icon
 FokusTargetNPCFrame.raidIcon = FokusTargetNPCFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
@@ -127,7 +132,6 @@ FokusTargetNPCFrame.raidIcon:SetPoint("TOPRIGHT", FokusTargetNPCFrame, "TOPRIGHT
 FokusTargetNPCFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 FokusTargetNPCFrame.raidIcon:Hide()
 
--- FIX v1.4.0: Shifted Target frame status icon Y-offset to -6 as well for text continuity
 FokusTargetNPCFrame.statusIcon = FokusTargetNPCFrame:CreateTexture(nil, "OVERLAY")
 FokusTargetNPCFrame.statusIcon:SetSize(10, 10)
 FokusTargetNPCFrame.statusIcon:SetPoint("TOPLEFT", FokusTargetNPCFrame, "TOPLEFT", 8, -6)
