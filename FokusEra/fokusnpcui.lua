@@ -20,6 +20,7 @@ FokusNPCFrame:SetBackdropColor(0, 0, 0, 0.85)
 FokusNPCFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 
 -- Layout replication matching the core framework
+FokusNPCFrame.staticPortrait = CreateFrame("Frame", nil, FokusNPCFrame)
 FokusNPCFrame.portrait = CreateFrame("PlayerModel", nil, FokusNPCFrame)
 FokusNPCFrame.portrait:SetSize(40, 38)
 FokusNPCFrame.portrait:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 6, -5)
@@ -28,8 +29,30 @@ local portBG = FokusNPCFrame:CreateTexture(nil, "BACKGROUND")
 portBG:SetAllPoints(FokusNPCFrame.portrait)
 portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
+FokusNPCFrame.iconOverlay = CreateFrame("Frame", nil, FokusNPCFrame)
+FokusNPCFrame.iconOverlay:SetAllPoints(FokusNPCFrame)
+FokusNPCFrame.iconOverlay:SetFrameStrata("MEDIUM")
+FokusNPCFrame.iconOverlay:SetFrameLevel(FokusNPCFrame.portrait:GetFrameLevel() + 10)
+
+-- NPC Portrait Icon Textures
+FokusNPCFrame.raidIcon = FokusNPCFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
+FokusNPCFrame.raidIcon:SetSize(14, 14)
+FokusNPCFrame.raidIcon:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 2, -1)
+FokusNPCFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+FokusNPCFrame.raidIcon:Hide()
+
+-- FIX v1.4.0: Shifted Y-offset to -6 for absolute text alignment matching
+FokusNPCFrame.statusIcon = FokusNPCFrame:CreateTexture(nil, "OVERLAY")
+FokusNPCFrame.statusIcon:SetSize(10, 10)
+FokusNPCFrame.statusIcon:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 52, -6)
+FokusNPCFrame.statusIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+FokusNPCFrame.statusIcon:SetTexCoord(0.75, 1, 0.25, 0.5)
+FokusNPCFrame.statusIcon:SetVertexColor(0.8, 0.8, 0.8)
+FokusNPCFrame.statusIcon:Show()
+
+-- Text header pushed 14px right to align flawlessly with the skull icon
 FokusNPCFrame.nameText = FokusNPCFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-FokusNPCFrame.nameText:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 52, -6)
+FokusNPCFrame.nameText:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 66, -6)
 FokusNPCFrame.nameText:SetJustifyH("LEFT")
 
 FokusNPCFrame.levelText = FokusNPCFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -40,7 +63,7 @@ FokusNPCFrame.hpBar = CreateFrame("StatusBar", nil, FokusNPCFrame)
 FokusNPCFrame.hpBar:SetSize(148, 14) 
 FokusNPCFrame.hpBar:SetPoint("TOPLEFT", FokusNPCFrame, "TOPLEFT", 52, -18)
 FokusNPCFrame.hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-FokusNPCFrame.hpBar:SetStatusBarColor(1, 0, 0) 
+FokusNPCFrame.hpBar:SetStatusBarColor(0, 0.8, 0) 
 
 FokusNPCFrame.hpText = FokusNPCFrame.hpBar:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
 FokusNPCFrame.hpText:SetPoint("CENTER", FokusNPCFrame.hpBar, "CENTER", 0, 0)
@@ -82,6 +105,7 @@ FokusTargetNPCFrame:SetBackdrop({
 FokusTargetNPCFrame:SetBackdropColor(0, 0, 0, 0.85)
 FokusTargetNPCFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 
+FokusTargetNPCFrame.staticPortrait = CreateFrame("Frame", nil, FokusTargetNPCFrame)
 FokusTargetNPCFrame.portrait = CreateFrame("PlayerModel", nil, FokusTargetNPCFrame)
 FokusTargetNPCFrame.portrait:SetSize(40, 38)
 FokusTargetNPCFrame.portrait:SetPoint("TOPRIGHT", FokusTargetNPCFrame, "TOPRIGHT", -6, -5)
@@ -91,8 +115,29 @@ local targetPortBG = FokusTargetNPCFrame:CreateTexture(nil, "BACKGROUND")
 targetPortBG:SetAllPoints(FokusTargetNPCFrame.portrait)
 targetPortBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
+FokusTargetNPCFrame.iconOverlay = CreateFrame("Frame", nil, FokusTargetNPCFrame)
+FokusTargetNPCFrame.iconOverlay:SetAllPoints(FokusTargetNPCFrame)
+FokusTargetNPCFrame.iconOverlay:SetFrameStrata("MEDIUM")
+FokusTargetNPCFrame.iconOverlay:SetFrameLevel(FokusTargetNPCFrame.portrait:GetFrameLevel() + 10)
+
+-- Target NPC Raid Mark Icon
+FokusTargetNPCFrame.raidIcon = FokusTargetNPCFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
+FokusTargetNPCFrame.raidIcon:SetSize(14, 14)
+FokusTargetNPCFrame.raidIcon:SetPoint("TOPRIGHT", FokusTargetNPCFrame, "TOPRIGHT", -2, -1)
+FokusTargetNPCFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+FokusTargetNPCFrame.raidIcon:Hide()
+
+-- FIX v1.4.0: Shifted Target frame status icon Y-offset to -6 as well for text continuity
+FokusTargetNPCFrame.statusIcon = FokusTargetNPCFrame:CreateTexture(nil, "OVERLAY")
+FokusTargetNPCFrame.statusIcon:SetSize(10, 10)
+FokusTargetNPCFrame.statusIcon:SetPoint("TOPLEFT", FokusTargetNPCFrame, "TOPLEFT", 8, -6)
+FokusTargetNPCFrame.statusIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+FokusTargetNPCFrame.statusIcon:SetTexCoord(0.75, 1, 0.25, 0.5)
+FokusTargetNPCFrame.statusIcon:SetVertexColor(0.8, 0.8, 0.8)
+FokusTargetNPCFrame.statusIcon:Hide() 
+
 FokusTargetNPCFrame.nameText = FokusTargetNPCFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-FokusTargetNPCFrame.nameText:SetPoint("TOPLEFT", FokusTargetNPCFrame, "TOPLEFT", 8, -6)
+FokusTargetNPCFrame.nameText:SetPoint("TOPLEFT", FokusTargetNPCFrame, "TOPLEFT", 22, -6)
 FokusTargetNPCFrame.nameText:SetSize(114, 12)
 FokusTargetNPCFrame.nameText:SetJustifyH("LEFT")
 
@@ -106,14 +151,12 @@ FokusTargetNPCFrame.manaBar:SetSize(114, 6)
 FokusTargetNPCFrame.manaBar:SetPoint("TOPLEFT", FokusTargetNPCFrame.hpBar, "BOTTOMLEFT", 0, -2)
 FokusTargetNPCFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 
--- FIX v1.4.0: MASTER DYNAMIC ALIGNMENT ENGINE (TALKS EXCLUSIVELY TO SHADOW FRAME)
+-- MASTER DYNAMIC ALIGNMENT ENGINE (TALKS EXCLUSIVELY TO SHADOW FRAME)
 function FokusEra_AlignNPCLayouts()
     if not FokusShadowFrame then return end
-    
     local width = FokusShadowFrame:GetWidth()
     local barWidth = width - 62
     
-    -- Sync non-secure boss frame structures with the single source of truth coordinates
     FokusNPCFrame:SetSize(width, 48)
     FokusNPCFrame:ClearAllPoints()
     FokusNPCFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, 0)

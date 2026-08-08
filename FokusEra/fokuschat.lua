@@ -25,31 +25,41 @@ communicationFrame:SetScript("OnEvent", function(self, event, prefix, message, c
     end
 end)
 
--- 1. CONSOLE SYSTEM COMMAND: /fokus
+-- 1. CONSOLE SYSTEM COMMAND: /fokus (FIX v1.4.0 — Bypasses NPC filtration blocks!)
 SLASH_FOKUS1 = "/fokus"
 SlashCmdList["FOKUS"] = function(msg)
     if InCombatLockdown() then return end
     if not UnitExists("target") then return end
-    local targetGUID = UnitGUID("target")
-    local foundToken = nil
+    
+    -- Check if target is a real player or an NPC creature
+    if UnitIsPlayer("target") then
+        local targetGUID = UnitGUID("target")
+        local foundToken = nil
 
-    if IsInRaid() then
-        for i = 1, 40 do
-            local token = "raid" .. i
-            if UnitExists(token) and UnitGUID(token) == targetGUID then foundToken = token; break end
-        end
-    else
-        if UnitGUID("player") == targetGUID then foundToken = "player"
+        if IsInRaid() then
+            for i = 1, 40 do
+                local token = "raid" .. i
+                if UnitExists(token) and UnitGUID(token) == targetGUID then foundToken = token; break end
+            end
         else
-            for i = 1, 4 do
-                if UnitGUID("party"..i) == targetGUID then foundToken = "party"..i; break end
+            if UnitGUID("player") == targetGUID then foundToken = "player"
+            else
+                for i = 1, 4 do
+                    if UnitGUID("party"..i) == targetGUID then foundToken = "party"..i; break end
+                end
             end
         end
-    end
 
-    if foundToken then 
-        FokusEraNS.FokusEra_SetGroupFocus(foundToken) 
-        if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
+        -- If player is in group, pass their unique unit token (for Clique support)
+        if foundToken then 
+            FokusEraNS.FokusEra_SetGroupFocus(foundToken) 
+        else
+            -- If it's a friendly player outside group, treat as player focus via target token
+            FokusEraNS.FokusEra_SetGroupFocus("target")
+        end
+    else
+        -- FIX: Target is a Boss or Mob! Bypass group scanning entirely and pass "target" directly!
+        FokusEraNS.FokusEra_SetGroupFocus("target")
     end
 end
 
@@ -58,7 +68,6 @@ SLASH_CLEARFOKUS1 = "/clearfokus"
 SlashCmdList["CLEARFOKUS"] = function(msg)
     if InCombatLockdown() then return end
     FokusEraNS.FokusEra_ClearGroupFocusLogic()
-    if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
 end
 
 -- 3. CONSOLE SYSTEM COMMAND: /fokusversion
@@ -84,26 +93,26 @@ SlashCmdList["FOKUSRESET"] = function(msg)
         return
     end
     
-    if FokusFrame and FokusTargetFrame then
-        FokusFrame:ClearAllPoints()
-        FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150) 
+    if FokusFrame and FokusTargetFrame and FokusShadowFrame then
+        -- Reset the master invisible shadow anchor frame back to base catalog standards
+        FokusShadowFrame:ClearAllPoints()
+        FokusShadowFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
         
         FokusEra_OffsetX = 4
         FokusEra_OffsetY = 0
         FokusEra_Width = 210
-        FokusEra_Spells = {} 
         
-        FokusTargetFrame:ClearAllPoints()
-        FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
-        
-        FokusFrame:SetWidth(FokusEra_Width)
+        FokusShadowFrame:SetWidth(FokusEra_Width)
+        if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
         if FokusEra_UpdateInternalWidths then FokusEra_UpdateInternalWidths() end
         
-        print("|cff00ff00[FokusEra]|r Interface layout coordinates, widths, and action spell slots successfully reset.")
+        print("|cff00ff00[FokusEra]|r Interface layout coordinates, widths, and action slots successfully reset.")
         
-        if not FokusEraNS.FokusEra_CT then
+        if not FokusEraNS.FokusEra_CT and not FokusEraNS.FokusEra_NPCGUID then
             print("|cffffaa00[FokusEra]|r Temporarily rendering sandbox test layout. Type /clearfokus to conceal.")
             
+            FokusFrame:ClearAllPoints()
+            FokusFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, 0)
             FokusFrame.nameText:SetText("Sandbox Focus")
             FokusFrame.levelText:SetText("Lvl 60")
             FokusFrame.hpBar:SetMinMaxValues(0, 100); FokusFrame.hpBar:SetValue(100); FokusFrame.hpText:SetText("100 / 100")
@@ -116,16 +125,14 @@ SlashCmdList["FOKUSRESET"] = function(msg)
             FokusEraTargetFrame.hpBar:SetMinMaxValues(0, 100); FokusEraTargetFrame.hpBar:SetValue(75) 
             FokusEraTargetFrame:Show()
         end
-        if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
     end
 end
 
 -- 5. CONSOLE SYSTEM COMMAND: /fokushelp
--- FIX v1.4.0: Completely removed the /fokusspell line to keep the help interface short and simple.
 local function DisplayInGameHelp()
     print("|cff00ff00------------------ [FokusEra Help] ------------------|r")
-    print("|cffffaa00/fokus|r - Sets your currently selected friendly group target to the focus framework (Out of combat).")
-    print("|cffffaa00/clearfokus|r - Clears your tracked focus target and completely conceals the frame template.")
+    print("|cffffaa00/fokus|r - Sets your currently selected target (Player or NPC) to the focus framework.")
+    print("|cffffaa00/clearfokus|r - Clears your tracked focus target and completely conceals the frame templates.")
     print("|cffffaa00/fokusreset|r - Resets frame layout screen coordinates safely back to the default bottom-third position.")
     print("|cffffaa00/fokusversion|r - Audits your active party or raid network for current FokusEra installation versions.")
     print("|cffffaa00/fokushelp|r - Prints this console command checklist overview directly onto your local chat frame.")

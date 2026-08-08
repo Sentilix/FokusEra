@@ -91,3 +91,16 @@ For clean client initialization, your core folder directory path must be named e
 1. Ensure **Clique** is updated to map onto external addons if you want direct mouseover click-casting.
 2. Boot into the server environment. Type **`/fokusreset`** to force the layout sandboxes onto your screen (Your system chat frame will confirm authorization with the active version string).
 3. Unlock the yellow wheel icon, adjust your sizing stretch widths, use `/fokusspell` to configure your hot-buttons, and clamp the padlock down red (Locked) to save profiles safely!
+
+
+Internal notes:
+Vi har disse scenarier:
+* scenarie 1: Vi skifter fra (nil) til Player (vinduet skal læse positioner fra saved vars, sætte de nye koordinater og kalde Show)
+* scenarie 2: Vi skifter fra Player til Player - vi skal ingenting gøre: vinduet er jo allerede perfekt.
+* scenarie 3: Vi skifter fra Player til NPC. Vindue skal flyttes til (Y = -10000) og vi kører scenarie 5
+* scenarie 4: Vi skifter fra Player til NIL. Vindue skal flyttes til (Y = -10000)
+* scenarie 5: Vi skifter fra (nil) til NPC. NpcVinduet skal kalde Show
+* scenarie 6: Vi skifter fra NPC til NPC - vi skal ingenging gøre
+* scenarie 7: Vi skifter fra NPC til Player - Vi kalder Hide og kalder scenarie 1
+* scenarie 8: Vi skifter fra NPC til nil - Vi kalder Hide.
+

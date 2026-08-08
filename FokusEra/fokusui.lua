@@ -7,7 +7,8 @@ FokusFrame = FokusEraFrame
 
 -- MAIN FRAME DESIGN (FokusFrame - Height: 48)
 FokusFrame:SetSize(210, 48)
-FokusFrame:SetMovable(false) -- Moving is now delegated directly to the shadow root layer frame!
+FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
+FokusFrame:SetMovable(false) 
 FokusFrame:EnableMouse(true)
 FokusFrame:RegisterForClicks("AnyUp")
 FokusFrame:Hide()
@@ -42,7 +43,7 @@ FokusFrame:SetScript("OnDragStop", function(self)
     local mainX, mainY = FokusShadowFrame:GetCenter()
     local parentX, parentY = UIParent:GetCenter()
     if mainX and mainY and parentX and parentY then
-        FokusEra_OffsetX = math.match and math.floor(mainX - parentX) or math.floor(mainX - parentX)
+        FokusEra_OffsetX = math.floor(mainX - parentX)
         FokusEra_OffsetY = math.floor(mainY - parentY)
     end
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
@@ -58,9 +59,31 @@ local portBG = FokusFrame:CreateTexture(nil, "BACKGROUND")
 portBG:SetAllPoints(FokusFrame.portrait)
 portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
--- Text strings layout geometry
+-- Master NPC Icon Overlay Frame Container
+FokusFrame.iconOverlay = CreateFrame("Frame", nil, FokusFrame)
+FokusFrame.iconOverlay:SetAllPoints(FokusFrame)
+FokusFrame.iconOverlay:SetFrameStrata("MEDIUM")
+FokusFrame.iconOverlay:SetFrameLevel(FokusFrame.portrait:GetFrameLevel() + 10)
+
+-- Portrait Texture Overlay Anchors (Raid Mark stays clean on the top edge)
+FokusFrame.raidIcon = FokusFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
+FokusFrame.raidIcon:SetSize(14, 14)
+FokusFrame.raidIcon:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 2, -1)
+FokusFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+FokusFrame.raidIcon:Hide()
+
+-- Swapped to the pure classic spell_holy_heal texture icon file asset
+FokusFrame.statusIcon = FokusFrame:CreateTexture(nil, "OVERLAY")
+FokusFrame.statusIcon:SetSize(10, 10)
+FokusFrame.statusIcon:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -6)
+FokusFrame.statusIcon:SetTexture("Interface\\Icons\\spell_holy_heal") 
+-- FIX v1.4.0: Zoom texture coordinates by 7% on each side to cleanly shave off Blizzard's default black borders!
+FokusFrame.statusIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+FokusFrame.statusIcon:Show() 
+
+-- Text row pushed exactly 14 pixels to the right to make space for the status icon
 FokusFrame.nameText = FokusFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-FokusFrame.nameText:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -6)
+FokusFrame.nameText:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 66, -6)
 FokusFrame.nameText:SetJustifyH("LEFT")
 
 FokusFrame.levelText = FokusFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -152,7 +175,7 @@ saveLoader:SetScript("OnEvent", function(self, event)
     if FokusEra_Width == nil then FokusEra_Width = 210 end 
     
     FokusFrame:SetWidth(FokusEra_Width) 
-    FokusFrame.resizeBtn:SetParent(FokusFrame) -- Keep handle attached
+    FokusFrame.resizeBtn:SetParent(FokusFrame)
     FokusEra_UpdateInternalWidths() 
     FokusEra_UpdateLockIconColor() 
     
