@@ -69,13 +69,12 @@ end
 SLASH_FOKUSVERSION1 = "/fokusversion"
 SlashCmdList["FOKUSVERSION"] = function(msg)
     if not (IsInRaid() or IsInGroup()) then
-        print("|cffffaa00[FokusEra]|r You must be in a party or a raid group to execute a network version scan.")
         print("|cff00ff00[FokusEra Version Check]|r " .. UnitName("player") .. " (You) is running: |cffffaa00" .. FokusEra_Version .. "|r")
         return
     end
     
     local targetChannel = IsInRaid() and "RAID" or "PARTY"
-    print("|cff00ff00[FokusEra Version Check]|r Scanning network for running FokusEra installations...")
+    print("|cff00ff00[FokusEra Version Check]|r Checking FokusEra Versions ...")
     print("|cff00ff00[FokusEra Version Check]|r " .. UnitName("player") .. " (You) is running: |cffffaa00" .. FokusEra_Version .. "|r")
     C_ChatInfo.SendAddonMessage("FokusEra", "VERSION_REQUEST", targetChannel)
 end
