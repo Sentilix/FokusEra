@@ -7,10 +7,7 @@ FokusFrame = FokusEraFrame
 
 -- MAIN FRAME DESIGN (FokusFrame - Height: 48)
 FokusFrame:SetSize(210, 48)
-FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
-FokusFrame:SetMovable(true)
-FokusFrame:SetResizable(true) 
-FokusFrame:SetResizeBounds(160, 48, 400, 48)
+FokusFrame:SetMovable(false) -- Moving is now delegated directly to the shadow root layer frame!
 FokusFrame:EnableMouse(true)
 FokusFrame:RegisterForClicks("AnyUp")
 FokusFrame:Hide()
@@ -33,14 +30,22 @@ function FokusEra_UpdateInternalWidths()
     FokusFrame.manaBar:SetWidth(barWidth)
 end
 
--- Drag handling for Main Frame
+-- Redirect drag script inputs from the active template canvas to the shadow root node
 FokusFrame:RegisterForDrag("LeftButton")
-FokusFrame:SetScript("OnDragStart", function(self) 
-    if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then self:StartMoving() end 
+FokusFrame:SetScript("OnDragStart", function(self)
+    if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then
+        FokusShadowFrame:StartMoving()
+    end
 end)
-FokusFrame:SetScript("OnDragStop", function(self) 
-    self:StopMovingOrSizing()
-    if ReanchorTargetFrame then ReanchorTargetFrame() end
+FokusFrame:SetScript("OnDragStop", function(self)
+    FokusShadowFrame:StopMovingOrSizing()
+    local mainX, mainY = FokusShadowFrame:GetCenter()
+    local parentX, parentY = UIParent:GetCenter()
+    if mainX and mainY and parentX and parentY then
+        FokusEra_OffsetX = math.match and math.floor(mainX - parentX) or math.floor(mainX - parentX)
+        FokusEra_OffsetY = math.floor(mainY - parentY)
+    end
+    if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
 end)
 
 -- Portrait sub-frames configuration
@@ -79,7 +84,6 @@ FokusFrame.manaBar:SetPoint("TOPLEFT", FokusFrame.hpBar, "BOTTOMLEFT", 0, -2)
 FokusFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
--- Click-cast communication bridge array configuration
 ClickCastFrames = ClickCastFrames or {}
 ClickCastFrames[FokusFrame] = true
 
@@ -119,7 +123,8 @@ FokusFrame.resizeBtn:SetScript("OnMouseUp", function(self, button)
     FokusFrame:StopMovingOrSizing()
     FokusEra_Width = FokusFrame:GetWidth()
     FokusEra_UpdateInternalWidths()
-    if ReanchorTargetFrame then ReanchorTargetFrame() end
+    if FokusShadowFrame then FokusShadowFrame:SetWidth(FokusEra_Width) end
+    if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
 end)
 
 function FokusEra_UpdateLockIconColor()
@@ -144,13 +149,15 @@ saveLoader:RegisterEvent("PLAYER_LOGIN")
 saveLoader:SetScript("OnEvent", function(self, event)
     if FokusEra_SavedLockState ~= nil then FokusEraNS.FokusEra_IsLocked = FokusEra_SavedLockState
     else FokusEra_SavedLockState = false end
-    if FokusEra_OffsetX == nil then FokusEra_OffsetX = 4 end
-    if FokusEra_OffsetY == nil then FokusEra_OffsetY = 0 end 
     if FokusEra_Width == nil then FokusEra_Width = 210 end 
+    
     FokusFrame:SetWidth(FokusEra_Width) 
+    FokusFrame.resizeBtn:SetParent(FokusFrame) -- Keep handle attached
     FokusEra_UpdateInternalWidths() 
     FokusEra_UpdateLockIconColor() 
-    if ReanchorTargetFrame then ReanchorTargetFrame() end
+    
+    if FokusShadowFrame then FokusShadowFrame:SetWidth(FokusEra_Width) end
+    if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     saveLoader:UnregisterEvent("PLAYER_LOGIN")
 end)
 

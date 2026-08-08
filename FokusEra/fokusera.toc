@@ -3,12 +3,14 @@
 ## Notes: A fully standalone custom Focus frame structure built for Classic Era.
 ## Author: Mimma @ EU-Pyrewood Village
 ## Version: 1.4.0
-## SavedVariablesPerCharacter: FokusEra_SavedLockState, FokusEra_OffsetX, FokusEra_OffsetY, FokusEra_Width
+## SavedVariablesPerCharacter: FokusEra_SavedLockState, FokusEra_OffsetX, FokusEra_OffsetY, FokusEra_Width, FokusEra_ShowBuffs, FokusEra_ShowDebuffs
 
 fokusinit.lua
+fokusshadowui.lua
 fokusoptions.lua
 fokusui.lua
 fokustargetui.lua
+fokusnpcui.lua
 fokusdispel.lua
 fokusraidicons.lua
 fokusauras.lua
