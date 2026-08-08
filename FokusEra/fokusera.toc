@@ -1,8 +1,8 @@
-## Interface: 11508, 11509
+## Interface: 11509
 ## Title: FokusEra - focus functionality for Classic Era
 ## Notes: A fully standalone custom Focus frame structure built for Classic Era.
 ## Author: Mimma @ EU-Pyrewood Village
-## Version: 1.3.1
+## Version: 1.4.0
 ## SavedVariablesPerCharacter: FokusEra_SavedLockState, FokusEra_OffsetX, FokusEra_OffsetY, FokusEra_Width, FokusEra_Spells, FokusEra_ShowBuffs, FokusEra_ShowDebuffs, FokusEra_ShowTargetAuras
 
 fokusinit.lua
