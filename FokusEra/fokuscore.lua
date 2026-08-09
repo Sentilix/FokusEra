@@ -224,7 +224,6 @@ FokusEraNS.CurrentFocusState = "NIL"
 function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
     if InCombatLockdown() then return end
     if unitToken and FokusFrame and FokusShadowFrame then
-        -- Catch forced non-group player overrides string sequences cleanly
         local actualToken = unitToken
         local isForcedNPC = false
         if unitToken == "target_npc_override" then
@@ -258,8 +257,7 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
             end
             print("|cff00ff00[FokusEra]|r Friendly Player Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
             
-            -- SCENARIE 1 & 7: Pull player frame elevator back cleanly onto absolute screen coordinates!
-            -- FIX v1.4.0: Anchored exclusively to UIParent to eliminate secure mouse-hit detection taints!
+            -- SCENARIE 1 & 7: Pull player frame elevator back cleanly onto absolute screen coordinates
             if previousState == "NIL" or previousState == "NPC" then
                 if previousState == "NPC" then FokusNPCFrame:Hide(); FokusTargetNPCFrame:Hide() end
                 
@@ -289,18 +287,19 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
             FokusFrame:SetAttribute("unit", nil); FokusFrame:SetAttribute("*unit", nil)
             print("|cff00ff00[FokusEra]|r Combat NPC/Boss Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
             
-            -- SCENARIE 3: PLAYER -> NPC (Drop Y-elevator relative to UIParent center topology)
-            if previousState == "PLAYER" then
-                if not InCombatLockdown() then
-                    FokusFrame:ClearAllPoints()
-                    local shadowLeft = FokusShadowFrame:GetLeft()
-                    if shadowLeft then
-                        FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, -10000)
-                    else
-                        FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -10000)
-                    end
-                    if FokusEraTargetFrame then FokusEraTargetFrame:Hide() end
+            -- FIX v1.4.0: UNIVERSAL ELEVATOR SAFEGUARD!
+            -- We removed the 'previousState == "PLAYER"' constraint. The secure template is now 
+            -- unconditionally dropped to Y = -10000 when transitioning to NPC mode from ANY state 
+            -- (including fresh logins / reloads), completely wiping out ghost frames and overlaps!
+            if not InCombatLockdown() then
+                FokusFrame:ClearAllPoints()
+                local shadowLeft = FokusShadowFrame:GetLeft()
+                if shadowLeft then
+                    FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, -10000)
+                else
+                    FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -10000)
                 end
+                if FokusEraTargetFrame then FokusEraTargetFrame:Hide() end
             end
             
             -- SCENARIE 4 & 5: Anchor NPC skaller straight to our single source of truth shadow frame
@@ -365,26 +364,15 @@ function FokusEraNS.FokusEra_ClearGroupFocusLogic()
     if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
 end
 
----------------------------------------------------------
--- BUGFIX: AUTOMATIC PURGE ON ROSTER CHANGES
----------------------------------------------------------
+-------------------------------------------------------------------------------
+-- BUGFIX: AUTOMATIC PURGE ON ROSTER CHANGES (RAID COMBAT END FIX v1.4.0)
+-------------------------------------------------------------------------------
 local groupCheckFrame = CreateFrame("Frame")
-groupCheckFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+groupCheckFrame:RegisterEvent("PARTY_LEAVE")
 groupCheckFrame:SetScript("OnEvent", function(self, event)
     if FokusEraNS.FokusEra_CT then
         if FokusEraNS.FokusEra_CT == "player" then return end
-        local targetStillInGroup = false
-        if IsInRaid() then
-            for i = 1, 40 do
-                if UnitGUID("raid"..i) == FokusEraNS.FokusEra_CurrentGUID then targetStillInGroup = true; break end
-            end
-        else
-            for i = 1, 4 do
-                if UnitGUID("party"..i) == FokusEraNS.FokusEra_CurrentGUID then targetStillInGroup = true; break end
-            end
-        end
-        
-        if not targetStillInGroup then
+        if not UnitExists(FokusEraNS.FokusEra_CT) then
             FokusEraNS.FokusEra_ClearGroupFocusLogic()
         end
     end
