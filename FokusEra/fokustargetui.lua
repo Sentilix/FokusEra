@@ -7,13 +7,14 @@ FokusTargetFrame = FokusEraTargetFrame
 
 -- MAIN TARGET FRAME DESIGN (Width defaults to 170, Height: 48)
 FokusTargetFrame:SetSize(170, 48)
-FokusTargetFrame:SetMovable(false)
+FokusTargetFrame:SetMovable(true) -- FIX v1.4.0: Allow cursor tracking hardware link out of combat
 FokusTargetFrame:SetResizable(true) 
 FokusTargetFrame:SetResizeBounds(120, 48, 400, 48) 
 FokusTargetFrame:EnableMouse(true)
 FokusTargetFrame:RegisterForClicks("AnyUp")
 FokusTargetFrame:Hide()
 
+-- Place frame layout in the exact secure DIALOG strata fortress
 FokusTargetFrame:SetFrameStrata("DIALOG")
 FokusTargetFrame:SetFrameLevel(20)
 
@@ -34,6 +35,41 @@ function FokusTarget_UpdateInternalWidths()
     FokusTargetFrame.hpBar:SetWidth(barWidth)
     FokusTargetFrame.manaBar:SetWidth(barWidth)
 end
+
+-- Redirect drag script inputs from the active template canvas to track target offsets
+FokusTargetFrame:RegisterForDrag("LeftButton")
+FokusTargetFrame:SetScript("OnDragStart", function(self)
+    if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then
+        -- Lift the frame element directly to follow cursor paths smoothly
+        self:StartMoving()
+        
+        -- FIX v1.4.0: REAL-TIME OFFSET SYNCHRONIZATION LOOP!
+        -- Continuously measures the exact spacing layout gap between the main frame right edge 
+        -- and the target frame left edge, preventing recursive anchor crashes instantly!
+        self:SetScript("OnUpdate", function()
+            if not InCombatLockdown() and FokusFrame and FokusFrame:GetRight() then
+                local fRight = FokusFrame:GetRight()
+                local fTop = FokusFrame:GetBottom() + (FokusFrame:GetHeight() / 2)
+                local tLeft = self:GetLeft()
+                local tTop = self:GetBottom() + (self:GetHeight() / 2)
+                
+                if fRight and fTop and tLeft and tTop then
+                    FokusEra_OffsetX = math.floor(tLeft - fRight)
+                    FokusEra_OffsetY = math.floor(tTop - fTop)
+                end
+            end
+        end)
+    end
+end)
+
+FokusTargetFrame:SetScript("OnDragStop", function(self)
+    -- Terminate the execution loop to completely save hardware cycles
+    self:SetScript("OnUpdate", nil)
+    self:StopMovingOrSizing()
+    
+    -- Recalculate and solidify final placement matrix
+    if ReanchorTargetFrame then ReanchorTargetFrame() end
+end)
 
 -- Right-anchored mirrored portrait configuration
 FokusTargetFrame.staticPortrait = CreateFrame("Frame", nil, FokusTargetFrame)
@@ -79,35 +115,22 @@ FokusTargetFrame.manaBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -34
 FokusTargetFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusTargetFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
--- INTERACTIVE RESIZE FRAME (FIX v1.4.0: Built in the absolute top TOOLTIP layer to break 3D depth!)
-FokusTargetResizeFrame = CreateFrame("Button", "FokusTargetResizeFrame", UIParent)
-FokusTargetResizeFrame:SetSize(12, 12)
-FokusTargetResizeFrame:SetFrameStrata("TOOLTIP") -- Absolute forward layer fortress
-FokusTargetResizeFrame:SetFrameLevel(100)
-FokusTargetResizeFrame:Hide()
+-- INTERACTIVE RESIZE BUTTON
+FokusTargetFrame.resizeBtn = CreateFrame("Button", nil, FokusTargetFrame.iconOverlay)
+FokusTargetFrame.resizeBtn:SetSize(12, 12)
+FokusTargetFrame.resizeBtn:SetPoint("BOTTOMRIGHT", FokusTargetFrame, "BOTTOMRIGHT", -2, 2)
+FokusTargetFrame.resizeBtn.tex = FokusTargetFrame.resizeBtn:CreateTexture(nil, "OVERLAY")
+FokusTargetFrame.resizeBtn.tex:SetAllPoints()
+FokusTargetFrame.resizeBtn.tex:SetTexture("Interface\\ChatFrame\\UI-SizeGrabber")
 
-FokusTargetResizeFrame.tex = FokusTargetResizeFrame:CreateTexture(nil, "OVERLAY")
-FokusTargetResizeFrame.tex:SetAllPoints()
-FokusTargetResizeFrame.tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-
-FokusTargetFrame.resizeBtn = FokusTargetResizeFrame -- Map references to clear out errors
-
-FokusTargetResizeFrame:SetScript("OnMouseDown", function(self, button)
+FokusTargetFrame.resizeBtn:SetScript("OnMouseDown", function(self, button)
     if button == "LeftButton" and not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked then
         FokusTargetFrame:SetResizable(true)
-        FokusTargetFrame:StartSizing("RIGHT")
-        
-        -- Live synchronization loop to dynamically scale layouts smoothly
-        FokusTargetResizeFrame:SetScript("OnUpdate", function()
-            if not InCombatLockdown() then
-                FokusTarget_UpdateInternalWidths()
-            end
-        end)
+        FokusTargetFrame:StartSizing("RIGHT") 
     end
 end)
 
-FokusTargetResizeFrame:SetScript("OnMouseUp", function(self, button)
-    FokusTargetResizeFrame:SetScript("OnUpdate", nil)
+FokusTargetFrame.resizeBtn:SetScript("OnMouseUp", function(self, button)
     FokusTargetFrame:StopMovingOrSizing()
     FokusEra_TargetWidth = FokusTargetFrame:GetWidth() 
     FokusTarget_UpdateInternalWidths()
@@ -121,32 +144,28 @@ function ReanchorTargetFrame()
     FokusTargetFrame:SetWidth(FokusEra_TargetWidth)
     FokusTarget_UpdateInternalWidths()
     
-    -- Sync the loose floating tooltip resize arrow onto the absolute corner of the frame
-    FokusTargetResizeFrame:ClearAllPoints()
-    FokusTargetResizeFrame:SetPoint("BOTTOMRIGHT", FokusTargetFrame, "BOTTOMRIGHT", -2, 2)
-    
     if FokusEraNS.FokusEra_IsLocked then
-        FokusTargetResizeFrame:Hide()
+        FokusTargetFrame.resizeBtn:Hide()
     else
-        if FokusTargetFrame:IsShown() then FokusTargetResizeFrame:Show() else FokusTargetResizeFrame:Hide() end
+        FokusTargetFrame.resizeBtn:Show()
     end
     
-    FokusTargetFrame:ClearAllPoints()
-    if FokusEra_OffsetX and FokusEra_OffsetY then
-        FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
-    else
-        FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", 4, 0)
+    -- Only force magnetic snapping if the user is NOT actively dragging the target frame hardware element
+    if not FokusTargetFrame:IsMovable() or FokusEraNS.FokusEra_IsLocked or not IsAltKeyDown() then
+        FokusTargetFrame:ClearAllPoints()
+        if FokusEra_OffsetX and FokusEra_OffsetY then
+            FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
+        else
+            FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", 4, 0)
+        end
     end
 end
-
--- Hook visibility routines to ensure the floating handle collapses correctly
-FokusTargetFrame:HookScript("OnShow", function() if not FokusEraNS.FokusEra_IsLocked then FokusTargetResizeFrame:Show() end end)
-FokusTargetFrame:HookScript("OnHide", function() FokusTargetResizeFrame:Hide() end)
 
 -- INITIALIZATION PROFILE LOADING ON BOOT
 local targetLoader = CreateFrame("Frame")
 targetLoader:RegisterEvent("PLAYER_LOGIN")
 targetLoader:SetScript("OnEvent", function(self)
+    FokusTargetFrame.resizeBtn:SetParent(FokusTargetFrame.iconOverlay)
     ReanchorTargetFrame()
     targetLoader:UnregisterEvent("PLAYER_LOGIN")
 end)
