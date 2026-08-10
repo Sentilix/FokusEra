@@ -73,14 +73,13 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
                 if not InCombatLockdown() then FokusTargetFrame:Show() end
             end
 
-            -- FIX v1.4.0: UNIFIED COLOR SYMMETRY LOGIC!
-            -- Removed the class color lookup to prevent Priest characters from turning the bar white.
-            -- Friendly players now natively sync to ulastelig solid Green (0, 0.8, 0) matching the player frame!
             if FokusTargetFrame and FokusTargetFrame.hpBar then
                 if UnitIsPlayer(fallbackToken) then
                     FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Solid Healer Green
+                elseif UnitReaction(fallbackToken, "player") >= 5 then
+                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0.8, 0) -- Yellow for friendly NPCs
                 else
-                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0, 0) -- Pure Red for NPCs
+                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0, 0) -- Red for nonfriendly NPCs                    
                 end
             end
 
