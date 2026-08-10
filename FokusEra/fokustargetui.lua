@@ -77,6 +77,12 @@ FokusTargetFrame.portrait = CreateFrame("PlayerModel", nil, FokusTargetFrame)
 FokusTargetFrame.portrait:SetSize(40, 38)
 FokusTargetFrame.portrait:SetPoint("TOPRIGHT", FokusTargetFrame, "TOPRIGHT", -6, -5)
 
+-- FIX v1.4.0:MIRRORED 3D PORTRAIT LAYER ELEVATION!
+-- Pulls the right-anchored target model window directly up into the DIALOG strata stack
+-- ensuring the 3D entity renders natively in front of the kulsorte slate background frame canvas!
+FokusTargetFrame.portrait:SetFrameStrata("DIALOG")
+FokusTargetFrame.portrait:SetFrameLevel(FokusTargetFrame:GetFrameLevel() + 2)
+
 local portBG = FokusTargetFrame:CreateTexture(nil, "BACKGROUND")
 portBG:SetAllPoints(FokusTargetFrame.portrait)
 portBG:SetColorTexture(0.05, 0.05, 0.05, 1)

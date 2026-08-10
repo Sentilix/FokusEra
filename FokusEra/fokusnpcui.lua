@@ -143,7 +143,7 @@ FokusTargetNPCFrame.staticPortrait = CreateFrame("Frame", nil, FokusTargetNPCFra
 FokusTargetNPCFrame.portrait = CreateFrame("PlayerModel", nil, FokusTargetNPCFrame)
 FokusTargetNPCFrame.portrait:SetSize(40, 38)
 FokusTargetNPCFrame.portrait:SetPoint("TOPRIGHT", FokusTargetNPCFrame, "TOPRIGHT", -6, -5)
-FokusTargetNPCFrame.portrait:SetScript("OnModelLoaded", function(self) self:SetCamera(0) end)
+FokusTargetNPCFrame.portrait:SetScript("OnModelLoaded", function(self) self:SetCamera(1) end)
 
 local targetPortBG = FokusTargetNPCFrame:CreateTexture(nil, "BACKGROUND")
 targetPortBG:SetAllPoints(FokusTargetNPCFrame.portrait)

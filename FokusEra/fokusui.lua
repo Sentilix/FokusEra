@@ -9,7 +9,7 @@ FokusFrame = FokusEraFrame
 FokusFrame:SetSize(210, 48)
 FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
 FokusFrame:SetMovable(false) 
-FokusFrame:SetResizable(true) -- Flag set during frame birth
+FokusFrame:SetResizable(true)
 FokusFrame:SetResizeBounds(160, 48, 400, 48)
 FokusFrame:EnableMouse(true)
 FokusFrame:RegisterForClicks("AnyUp")
@@ -42,30 +42,14 @@ FokusFrame:RegisterForDrag("LeftButton")
 FokusFrame:SetScript("OnDragStart", function(self)
     if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then
         FokusShadowFrame:StartMoving()
-        
-        FokusShadowFrame:SetScript("OnUpdate", function()
-            local sLeft = FokusShadowFrame:GetLeft()
-            local sBottom = FokusShadowFrame:GetBottom()
-            if sLeft and sBottom and not InCombatLockdown() then
-                FokusFrame:ClearAllPoints()
-                FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", sLeft, sBottom)
-                if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
-                if ReanchorTargetFrame then ReanchorTargetFrame() end
-            end
-        end)
     end
 end)
 
 FokusFrame:SetScript("OnDragStop", function(self)
-    FokusShadowFrame:SetScript("OnUpdate", nil)
     FokusShadowFrame:StopMovingOrSizing()
-    
     if not InCombatLockdown() then
         FokusEra_ShadowX = math.floor(FokusShadowFrame:GetLeft())
         FokusEra_ShadowY = math.floor(FokusShadowFrame:GetBottom())
-        
-        FokusFrame:ClearAllPoints()
-        FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
     end
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     if ReanchorTargetFrame then ReanchorTargetFrame() end
@@ -118,7 +102,7 @@ FokusFrame.hpBar = CreateFrame("StatusBar", nil, FokusFrame)
 FokusFrame.hpBar:SetSize(148, 14) 
 FokusFrame.hpBar:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -18)
 FokusFrame.hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-FokusFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
+FokusFrame.hpBar:SetStatusBarColor(0, 0.8, 0) 
 
 FokusFrame.hpText = FokusFrame.hpBar:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
 FokusFrame.hpText:SetPoint("CENTER", FokusFrame.hpBar, "CENTER", 0, 0)
@@ -126,7 +110,7 @@ FokusFrame.hpText:SetPoint("CENTER", FokusFrame.hpBar, "CENTER", 0, 0)
 -- Main Power Bar / Mana
 FokusFrame.manaBar = CreateFrame("StatusBar", nil, FokusFrame)
 FokusFrame.manaBar:SetSize(148, 6) 
-FokusFrame.manaBar:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -34)
+FokusFrame.manaBar:SetPoint("TOPLEFT", FokusFrame.hpBar, "BOTTOMLEFT", 0, -2)
 FokusFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
@@ -159,7 +143,6 @@ FokusFrame.resizeBtn.tex = FokusFrame.resizeBtn:CreateTexture(nil, "OVERLAY")
 FokusFrame.resizeBtn.tex:SetAllPoints()
 FokusFrame.resizeBtn.tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
 
--- FIX v1.4.0: Explicitly re-enforce the resizable flag state state right before triggering Blizzard's StartSizing API core block!
 FokusFrame.resizeBtn:SetScript("OnMouseDown", function(self, button)
     if button == "LeftButton" and not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked then
         FokusFrame:SetResizable(true)
@@ -203,6 +186,13 @@ saveLoader:SetScript("OnEvent", function(self, event)
     FokusFrame.resizeBtn:SetParent(FokusFrame)
     FokusEra_UpdateInternalWidths() 
     FokusEra_UpdateLockIconColor() 
+    
+    -- FIX v1.4.0: Clean Classic Era portrait setup without Retail nil function calls
+    if FokusFrame.portrait and FokusFrame.portrait.SetUnit then
+        FokusFrame.portrait:SetUnit("player")
+        FokusFrame.portrait:SetCamera(0)
+        FokusFrame.portrait:SetPosition(0, 0, 0)
+    end
     
     if FokusShadowFrame then FokusShadowFrame:SetWidth(FokusEra_Width) end
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
