@@ -32,9 +32,7 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
         FokusFrame.hpBar:SetValue(currentHP)
         FokusFrame.hpText:SetText(currentHP .. " / " .. maxHP)
         
-        -- FIX v1.4.0: OPTIMIZATION GUARD FOR MAIN PLAYER PORTRAIT!
-        -- We sample the current active GUID. If it matches the last rendered frame token,
-        -- we bypass the SetUnit pipeline completely to eliminate the 10Hz texture blinking loop!
+        -- Main player frame 3D portrait cache guard
         local currentFocusGUID = UnitGUID(token)
         if currentFocusGUID and currentFocusGUID ~= FokusFrame.lastRenderedGUID then
             FokusFrame.lastRenderedGUID = currentFocusGUID
@@ -66,18 +64,6 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
                 local targetName = UnitName(fallbackToken) or "Target"
                 FokusTargetFrame.nameText:SetText(targetName)
                 
-                -- Update target class colors safely
-                if UnitIsPlayer(fallbackToken) then
-                    local _, classToken = UnitClass(fallbackToken)
-                    local color = RAID_CLASS_COLORS[classToken]
-                    if color then FokusTargetFrame.hpBar:SetStatusBarColor(color.r, color.g, color.b) end
-                else
-                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0, 0) -- Red for NPCs
-                end
-
-                -- FIX v1.4.0: OPTIMIZATION GUARD FOR TARGET PORTRAIT!
-                -- Moved safely inside the targetGUID change verification block. 
-                -- Redraws the 3D entity ONLY when a fresh unit swap is registered by the engine!
                 if FokusTargetFrame.portrait and FokusTargetFrame.portrait.SetUnit then
                     FokusTargetFrame.portrait:SetUnit(fallbackToken)
                     FokusTargetFrame.portrait:SetCamera(0)
@@ -85,6 +71,17 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
                 end
 
                 if not InCombatLockdown() then FokusTargetFrame:Show() end
+            end
+
+            -- FIX v1.4.0: UNIFIED COLOR SYMMETRY LOGIC!
+            -- Removed the class color lookup to prevent Priest characters from turning the bar white.
+            -- Friendly players now natively sync to ulastelig solid Green (0, 0.8, 0) matching the player frame!
+            if FokusTargetFrame and FokusTargetFrame.hpBar then
+                if UnitIsPlayer(fallbackToken) then
+                    FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Solid Healer Green
+                else
+                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0, 0) -- Pure Red for NPCs
+                end
             end
 
             -- Continuous live health updates for the target of focus
@@ -131,7 +128,6 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
             FokusNPCFrame.lastKnownHP = currentHP
             FokusNPCFrame.lastKnownMaxHP = maxHP
 
-            -- FIX v1.4.0: OPTIMIZATION GUARD FOR NPC PORTRAIT!
             -- Prevent constant 3D model resets on the NPC frame by verifying identity
             if FokusNPCFrame.lastRenderedNPCGUID ~= rawGUID then
                 FokusNPCFrame.lastRenderedNPCGUID = rawGUID
@@ -160,7 +156,7 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
         else
             -- Signal temporarily drop out of group sight range (YELLOW CACHE STATE)
             FokusNPCFrame.hpBar:SetStatusBarColor(0.8, 0.8, 0) -- Warning Yellow cache alert
-            FokusNPCFrame.lastRenderedNPCGUID = nil -- Wipe cache so it triggers instantly when back in range
+            FokusNPCFrame.lastRenderedNPCGUID = nil 
             FokusTargetNPCFrame:Hide()
         end
     end

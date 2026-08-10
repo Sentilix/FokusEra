@@ -39,13 +39,9 @@ shadowLoader:SetScript("OnEvent", function(self, event)
     if FokusEra_ShadowX == nil then FokusEra_ShadowX = math.floor((GetScreenHeight() / 2) - 105) end
     if FokusEra_ShadowY == nil then FokusEra_ShadowY = math.floor((GetScreenHeight() / 3) - 24) end
     
-    -- Absolute urokkelig bund-forankring for skyggen per karakter
     FokusShadowFrame:ClearAllPoints()
     FokusShadowFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
-    
-    -- FIX v1.4.0: Vi rører OVERHOVEDET ikke ved FokusFrame under opstarten! 
-    -- Dens klik-areal forbliver snorlige og urokkeligt, nøjagtig som i Version 1.3.0!
-    
+        
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     if ReanchorTargetFrame then ReanchorTargetFrame() end
     

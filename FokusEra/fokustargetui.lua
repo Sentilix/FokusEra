@@ -77,15 +77,9 @@ FokusTargetFrame.portrait = CreateFrame("PlayerModel", nil, FokusTargetFrame)
 FokusTargetFrame.portrait:SetSize(40, 38)
 FokusTargetFrame.portrait:SetPoint("TOPRIGHT", FokusTargetFrame, "TOPRIGHT", -6, -5)
 
--- FIX v1.4.0:MIRRORED 3D PORTRAIT LAYER ELEVATION!
--- Pulls the right-anchored target model window directly up into the DIALOG strata stack
--- ensuring the 3D entity renders natively in front of the kulsorte slate background frame canvas!
-FokusTargetFrame.portrait:SetFrameStrata("DIALOG")
-FokusTargetFrame.portrait:SetFrameLevel(FokusTargetFrame:GetFrameLevel() + 2)
-
-local portBG = FokusTargetFrame:CreateTexture(nil, "BACKGROUND")
-portBG:SetAllPoints(FokusTargetFrame.portrait)
-portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
+local targetPortBG = FokusTargetFrame:CreateTexture(nil, "BACKGROUND")
+targetPortBG:SetAllPoints(FokusTargetFrame.portrait)
+targetPortBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
 -- Master Target Icon Overlay Frame Container
 FokusTargetFrame.iconOverlay = CreateFrame("Frame", nil, FokusTargetFrame)
@@ -111,14 +105,24 @@ FokusTargetFrame.nameText:SetJustifyH("LEFT")
 FokusTargetFrame.hpBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
 FokusTargetFrame.hpBar:SetSize(114, 14)
 FokusTargetFrame.hpBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -18)
+
+-- FIX v1.4.0: RESTORE CLASSIC TEXTURE BLUPRINT!
+-- Replaced the flat WHITE8X8 override. Re-engages Blizzard's native 3D statusbar texture 
+-- so the target layout meshes flawlessly with the player and NPC design frameworks.
 FokusTargetFrame.hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
+if FokusTargetFrame.hpBar:GetStatusBarTexture() then
+    FokusTargetFrame.hpBar:GetStatusBarTexture():SetDrawLayer("BORDER")
+end
+FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Solid Healer Green birth color
 
 -- Target Power Bar / Mana
 FokusTargetFrame.manaBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
 FokusTargetFrame.manaBar:SetSize(114, 6)
 FokusTargetFrame.manaBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -34)
 FokusTargetFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+if FokusTargetFrame.manaBar:GetStatusBarTexture() then
+    FokusTargetFrame.manaBar:GetStatusBarTexture():SetDrawLayer("BORDER")
+end
 FokusTargetFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
 -- INTERACTIVE RESIZE BUTTON
@@ -156,7 +160,6 @@ function ReanchorTargetFrame()
         FokusTargetFrame.resizeBtn:Show()
     end
     
-    -- Only force magnetic snapping if the user is NOT actively dragging the target frame hardware element
     if not FokusTargetFrame:IsMovable() or FokusEraNS.FokusEra_IsLocked or not IsAltKeyDown() then
         FokusTargetFrame:ClearAllPoints()
         if FokusEra_OffsetX and FokusEra_OffsetY then
