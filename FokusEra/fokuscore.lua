@@ -25,6 +25,11 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
             return
         end
 
+        local rawName = UnitName(token) or "Unknown"
+        local rawLevel = UnitLevel(token) or "??"
+        FokusFrame.nameText:SetText(rawName)
+        FokusFrame.levelText:SetText(rawLevel)
+        
         -- Update main focus frame values smoothly
         local currentHP = UnitHealth(token)
         local maxHP = UnitHealthMax(token)
@@ -82,7 +87,7 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
                     FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0, 0) -- Red for nonfriendly NPCs                    
                 end
             end
-
+            
             -- Continuous live health updates for the target of focus
             local tCurrentHP = UnitHealth(fallbackToken)
             local tMaxHP = UnitHealthMax(fallbackToken)
@@ -119,10 +124,11 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
             local currentHP = UnitHealth(matchedToken)
             local maxHP = UnitHealthMax(matchedToken)
             
-            FokusNPCFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Green feedback link
+            FokusNPCFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
             FokusNPCFrame.hpBar:SetMinMaxValues(0, maxHP)
             FokusNPCFrame.hpBar:SetValue(currentHP)
             FokusNPCFrame.hpText:SetText(currentHP .. " / " .. maxHP)
+            FokusNPCFrame.nameText:SetText(UnitName(matchedToken) or "Unknown NPC")
             
             FokusNPCFrame.lastKnownHP = currentHP
             FokusNPCFrame.lastKnownMaxHP = maxHP
@@ -173,8 +179,7 @@ function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
         end
 
         local rawGUID = UnitGUID(actualToken) or "0x0"
-        local rawName = UnitName(actualToken) or "Unknown Entity"
-        
+        local rawName = UnitName(actualToken) or "Unknown Entity"        
         FokusEraNS.FokusEra_CurrentGUID = rawGUID
         FokusEraNS.FokusEra_CurrentName = rawName
         
