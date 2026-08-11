@@ -42,14 +42,37 @@ FokusFrame:RegisterForDrag("LeftButton")
 FokusFrame:SetScript("OnDragStart", function(self)
     if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then
         FokusShadowFrame:StartMoving()
+        
+        -- FIX v1.4.0: REAL-TIME GRAPHICS SYNC UPDATE LOOP!
+        -- Continuously pulls absolute coordinates from the shadow frame canvas while dragging,
+        -- keeping layout strings, names, and bar textures 100% stable and visible above the background!
+        FokusShadowFrame:SetScript("OnUpdate", function()
+            local sLeft = FokusShadowFrame:GetLeft()
+            local sBottom = FokusShadowFrame:GetBottom()
+            if sLeft and sBottom and not InCombatLockdown() then
+                FokusFrame:ClearAllPoints()
+                FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", sLeft, sBottom)
+                if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+                if ReanchorTargetFrame then ReanchorTargetFrame() end
+            end
+        end)
     end
 end)
 
 FokusFrame:SetScript("OnDragStop", function(self)
+    FokusShadowFrame:SetScript("OnUpdate", nil)
     FokusShadowFrame:StopMovingOrSizing()
+    
     if not InCombatLockdown() then
-        FokusEra_ShadowX = math.floor(FokusShadowFrame:GetLeft())
-        FokusEra_ShadowY = math.floor(FokusShadowFrame:GetBottom())
+        local sLeft = FokusShadowFrame:GetLeft()
+        local sBottom = FokusShadowFrame:GetBottom()
+        if sLeft and sBottom then
+            FokusEra_ShadowX = math.floor(sLeft)
+            FokusEra_ShadowY = math.floor(sBottom)
+            
+            FokusFrame:ClearAllPoints()
+            FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
+        end
     end
     if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     if ReanchorTargetFrame then ReanchorTargetFrame() end
@@ -187,7 +210,6 @@ saveLoader:SetScript("OnEvent", function(self, event)
     FokusEra_UpdateInternalWidths() 
     FokusEra_UpdateLockIconColor() 
     
-    -- FIX v1.4.0: Clean Classic Era portrait setup without Retail nil function calls
     if FokusFrame.portrait and FokusFrame.portrait.SetUnit then
         FokusFrame.portrait:SetUnit("player")
         FokusFrame.portrait:SetCamera(0)
