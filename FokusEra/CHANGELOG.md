@@ -3,7 +3,7 @@
 All notable changes to the **FokusEra** addon architecture will be documented in this registry file.
 
 ---
-## — 2026-08-08 (version 1.4.0)
+## — 2026-08-11 (version 1.4.0)
 
 ### ✨ Added
 * Added support for setting focus on NPCs, bosses, and non-group players.
