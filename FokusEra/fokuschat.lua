@@ -25,14 +25,16 @@ communicationFrame:SetScript("OnEvent", function(self, event, prefix, message, c
     end
 end)
 
--- 1. CONSOLE SYSTEM COMMAND: /fokus
+-- 1. CONSOLE SYSTEM COMMAND: /fokus (SLUSE: Gruppe-scanner med fallback opsamling)
 SLASH_FOKUS1 = "/fokus"
 SlashCmdList["FOKUS"] = function(msg)
     if InCombatLockdown() then return end
     if not UnitExists("target") then return end
+    
     local targetGUID = UnitGUID("target")
     local foundToken = nil
 
+    -- DINE ORIGINALE SPILLE-REGLER: Vi scanner udelukkende dig selv og din gruppes enheder!
     if IsInRaid() then
         for i = 1, 40 do
             local token = "raid" .. i
@@ -42,15 +44,17 @@ SlashCmdList["FOKUS"] = function(msg)
         if UnitGUID("player") == targetGUID then foundToken = "player"
         else
             for i = 1, 4 do
-                local token = "party" .. i
-                if UnitExists(token) and UnitGUID(token) == targetGUID then foundToken = token; break end
+                if UnitGUID("party"..i) == targetGUID then foundToken = "party"..i; break end
             end
         end
     end
 
+    -- SLUSE 1: Målet er fundet i din gruppe! Kør den sikre spiller-ramme med Clique support.
     if foundToken then 
         FokusEraNS.FokusEra_SetGroupFocus(foundToken) 
-        if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
+    else
+        -- SLUSE 2 (Fallback): Målet faldt igennem (fremmed spiller eller NPC)! Send direkte til Boss-rammen!
+        FokusEraNS.FokusEra_SetGroupFocus("target_npc_override")
     end
 end
 
@@ -59,20 +63,18 @@ SLASH_CLEARFOKUS1 = "/clearfokus"
 SlashCmdList["CLEARFOKUS"] = function(msg)
     if InCombatLockdown() then return end
     FokusEraNS.FokusEra_ClearGroupFocusLogic()
-    if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
 end
 
 -- 3. CONSOLE SYSTEM COMMAND: /fokusversion
 SLASH_FOKUSVERSION1 = "/fokusversion"
 SlashCmdList["FOKUSVERSION"] = function(msg)
     if not (IsInRaid() or IsInGroup()) then
-        print("|cffffaa00[FokusEra]|r You must be in a party or a raid group to execute a network version scan.")
         print("|cff00ff00[FokusEra Version Check]|r " .. UnitName("player") .. " (You) is running: |cffffaa00" .. FokusEra_Version .. "|r")
         return
     end
     
     local targetChannel = IsInRaid() and "RAID" or "PARTY"
-    print("|cff00ff00[FokusEra Version Check]|r Scanning network for running FokusEra installations...")
+    print("|cff00ff00[FokusEra Version Check]|r Checking FokusEra Versions ...")
     print("|cff00ff00[FokusEra Version Check]|r " .. UnitName("player") .. " (You) is running: |cffffaa00" .. FokusEra_Version .. "|r")
     C_ChatInfo.SendAddonMessage("FokusEra", "VERSION_REQUEST", targetChannel)
 end
@@ -85,26 +87,25 @@ SlashCmdList["FOKUSRESET"] = function(msg)
         return
     end
     
-    if FokusFrame and FokusTargetFrame then
-        FokusFrame:ClearAllPoints()
-        FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150) 
+    if FokusFrame and FokusTargetFrame and FokusShadowFrame then
+        FokusShadowFrame:ClearAllPoints()
+        FokusShadowFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
         
         FokusEra_OffsetX = 4
         FokusEra_OffsetY = 0
         FokusEra_Width = 210
-        FokusEra_Spells = {} 
         
-        FokusTargetFrame:ClearAllPoints()
-        FokusTargetFrame:SetPoint("LEFT", FokusFrame, "RIGHT", FokusEra_OffsetX, FokusEra_OffsetY)
-        
-        FokusFrame:SetWidth(FokusEra_Width)
+        FokusShadowFrame:SetWidth(FokusEra_Width)
+        if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
         if FokusEra_UpdateInternalWidths then FokusEra_UpdateInternalWidths() end
         
-        print("|cff00ff00[FokusEra]|r Interface layout coordinates, widths, and action spell slots successfully reset.")
+        print("|cff00ff00[FokusEra]|r Interface layout coordinates, widths, and action slots successfully reset.")
         
-        if not FokusEraNS.FokusEra_CT then
+        if not FokusEraNS.FokusEra_CT and not FokusEraNS.FokusEra_NPCGUID then
             print("|cffffaa00[FokusEra]|r Temporarily rendering sandbox test layout. Type /clearfokus to conceal.")
             
+            FokusFrame:ClearAllPoints()
+            FokusFrame:SetPoint("CENTER", FokusShadowFrame, "CENTER", 0, 0)
             FokusFrame.nameText:SetText("Sandbox Focus")
             FokusFrame.levelText:SetText("Lvl 60")
             FokusFrame.hpBar:SetMinMaxValues(0, 100); FokusFrame.hpBar:SetValue(100); FokusFrame.hpText:SetText("100 / 100")
@@ -117,16 +118,14 @@ SlashCmdList["FOKUSRESET"] = function(msg)
             FokusEraTargetFrame.hpBar:SetMinMaxValues(0, 100); FokusEraTargetFrame.hpBar:SetValue(75) 
             FokusEraTargetFrame:Show()
         end
-        if FokusEra_RefreshSpellBar then FokusEra_RefreshSpellBar() end
     end
 end
 
 -- 5. CONSOLE SYSTEM COMMAND: /fokushelp
 local function DisplayInGameHelp()
     print("|cff00ff00------------------ [FokusEra Help] ------------------|r")
-    print("|cffffaa00/fokus|r - Sets your currently selected friendly group target to the focus framework (Out of combat).")
-    print("|cffffaa00/clearfokus|r - Clears your tracked focus target and completely conceals the frame template.")
-    print("|cffffaa00/fokusspell [Spell Name]|r - Binds an icon automatically to the next free slot (Or use /fokusspell [1-5] [Name]).")
+    print("|cffffaa00/fokus|r - Sets your currently selected target (Player or NPC) to the focus framework.")
+    print("|cffffaa00/clearfokus|r - Clears your tracked focus target and completely conceals the frame templates.")
     print("|cffffaa00/fokusreset|r - Resets frame layout screen coordinates safely back to the default bottom-third position.")
     print("|cffffaa00/fokusversion|r - Audits your active party or raid network for current FokusEra installation versions.")
     print("|cffffaa00/fokushelp|r - Prints this console command checklist overview directly onto your local chat frame.")
@@ -139,3 +138,5 @@ SLASH_FOKUSHELP1 = "/fokushelp"
 SlashCmdList["FOKUSHELP"] = function(msg)
     DisplayInGameHelp()
 end
+
+-- end fokuschat.lua

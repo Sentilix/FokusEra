@@ -8,12 +8,16 @@ FokusFrame = FokusEraFrame
 -- MAIN FRAME DESIGN (FokusFrame - Height: 48)
 FokusFrame:SetSize(210, 48)
 FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
-FokusFrame:SetMovable(true)
-FokusFrame:SetResizable(true) 
+FokusFrame:SetMovable(false) 
+FokusFrame:SetResizable(true)
 FokusFrame:SetResizeBounds(160, 48, 400, 48)
 FokusFrame:EnableMouse(true)
 FokusFrame:RegisterForClicks("AnyUp")
 FokusFrame:Hide()
+
+-- FORCE SECURE LAYER FORWARD OVER WEAKAURAS & SHADOW ROOT
+FokusFrame:SetFrameStrata("DIALOG")
+FokusFrame:SetFrameLevel(20)
 
 FokusFrame:SetBackdrop({
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -27,20 +31,50 @@ FokusFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 -- FUNCTION: Updates the width of the status bars inside the frame based on current frame width
 function FokusEra_UpdateInternalWidths()
     if InCombatLockdown() then return end
-    
     local newWidth = FokusFrame:GetWidth()
     local barWidth = newWidth - 62 
     FokusFrame.hpBar:SetWidth(barWidth)
     FokusFrame.manaBar:SetWidth(barWidth)
 end
 
--- Drag handling for Main Frame
+-- Redirect drag script inputs from the active template canvas to the shadow root node
 FokusFrame:RegisterForDrag("LeftButton")
-FokusFrame:SetScript("OnDragStart", function(self) 
-    if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then self:StartMoving() end 
+FokusFrame:SetScript("OnDragStart", function(self)
+    if not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked and IsAltKeyDown() then
+        FokusShadowFrame:StartMoving()
+        
+        -- FIX v1.4.0: REAL-TIME GRAPHICS SYNC UPDATE LOOP!
+        -- Continuously pulls absolute coordinates from the shadow frame canvas while dragging,
+        -- keeping layout strings, names, and bar textures 100% stable and visible above the background!
+        FokusShadowFrame:SetScript("OnUpdate", function()
+            local sLeft = FokusShadowFrame:GetLeft()
+            local sBottom = FokusShadowFrame:GetBottom()
+            if sLeft and sBottom and not InCombatLockdown() then
+                FokusFrame:ClearAllPoints()
+                FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", sLeft, sBottom)
+                if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+                if ReanchorTargetFrame then ReanchorTargetFrame() end
+            end
+        end)
+    end
 end)
-FokusFrame:SetScript("OnDragStop", function(self) 
-    self:StopMovingOrSizing()
+
+FokusFrame:SetScript("OnDragStop", function(self)
+    FokusShadowFrame:SetScript("OnUpdate", nil)
+    FokusShadowFrame:StopMovingOrSizing()
+    
+    if not InCombatLockdown() then
+        local sLeft = FokusShadowFrame:GetLeft()
+        local sBottom = FokusShadowFrame:GetBottom()
+        if sLeft and sBottom then
+            FokusEra_ShadowX = math.floor(sLeft)
+            FokusEra_ShadowY = math.floor(sBottom)
+            
+            FokusFrame:ClearAllPoints()
+            FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", FokusEra_ShadowX, FokusEra_ShadowY)
+        end
+    end
+    if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     if ReanchorTargetFrame then ReanchorTargetFrame() end
 end)
 
@@ -54,9 +88,32 @@ local portBG = FokusFrame:CreateTexture(nil, "BACKGROUND")
 portBG:SetAllPoints(FokusFrame.portrait)
 portBG:SetColorTexture(0.05, 0.05, 0.05, 1)
 
--- Text strings layout geometry
+-- Master NPC Icon Overlay Frame Container
+FokusFrame.iconOverlay = CreateFrame("Frame", nil, FokusFrame)
+FokusFrame.iconOverlay:SetAllPoints(FokusFrame)
+FokusFrame.iconOverlay:SetFrameStrata("DIALOG")
+FokusFrame.iconOverlay:SetFrameLevel(FokusFrame:GetFrameLevel() + 5)
+FokusFrame.iconOverlay:EnableMouse(false)
+if FokusFrame.iconOverlay.SetMouseClickEnabled then FokusFrame.iconOverlay:SetMouseClickEnabled(false) end
+
+-- Portrait Texture Overlay Anchors (Raid Mark stays clean on the top edge)
+FokusFrame.raidIcon = FokusFrame.iconOverlay:CreateTexture(nil, "OVERLAY")
+FokusFrame.raidIcon:SetSize(14, 14)
+FokusFrame.raidIcon:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 2, -1)
+FokusFrame.raidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
+FokusFrame.raidIcon:Hide()
+
+-- Swapped to the pure classic spell_holy_heal texture icon file asset with border crop
+FokusFrame.statusIcon = FokusFrame:CreateTexture(nil, "OVERLAY")
+FokusFrame.statusIcon:SetSize(10, 10)
+FokusFrame.statusIcon:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -6)
+FokusFrame.statusIcon:SetTexture("Interface\\Icons\\spell_holy_heal") 
+FokusFrame.statusIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+FokusFrame.statusIcon:Show() 
+
+-- Text row pushed exactly 14 pixels to the right to make space for the status icon
 FokusFrame.nameText = FokusFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-FokusFrame.nameText:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -6)
+FokusFrame.nameText:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 66, -6)
 FokusFrame.nameText:SetJustifyH("LEFT")
 
 FokusFrame.levelText = FokusFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -68,7 +125,7 @@ FokusFrame.hpBar = CreateFrame("StatusBar", nil, FokusFrame)
 FokusFrame.hpBar:SetSize(148, 14) 
 FokusFrame.hpBar:SetPoint("TOPLEFT", FokusFrame, "TOPLEFT", 52, -18)
 FokusFrame.hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-FokusFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
+FokusFrame.hpBar:SetStatusBarColor(0, 0.8, 0) 
 
 FokusFrame.hpText = FokusFrame.hpBar:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
 FokusFrame.hpText:SetPoint("CENTER", FokusFrame.hpBar, "CENTER", 0, 0)
@@ -80,7 +137,6 @@ FokusFrame.manaBar:SetPoint("TOPLEFT", FokusFrame.hpBar, "BOTTOMLEFT", 0, -2)
 FokusFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
--- Click-cast communication bridge array configuration
 ClickCastFrames = ClickCastFrames or {}
 ClickCastFrames[FokusFrame] = true
 
@@ -112,6 +168,7 @@ FokusFrame.resizeBtn.tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber
 
 FokusFrame.resizeBtn:SetScript("OnMouseDown", function(self, button)
     if button == "LeftButton" and not InCombatLockdown() and not FokusEraNS.FokusEra_IsLocked then
+        FokusFrame:SetResizable(true)
         FokusFrame:StartSizing("RIGHT") 
     end
 end)
@@ -120,7 +177,8 @@ FokusFrame.resizeBtn:SetScript("OnMouseUp", function(self, button)
     FokusFrame:StopMovingOrSizing()
     FokusEra_Width = FokusFrame:GetWidth()
     FokusEra_UpdateInternalWidths()
-    if ReanchorTargetFrame then ReanchorTargetFrame() end
+    if FokusShadowFrame then FokusShadowFrame:SetWidth(FokusEra_Width) end
+    if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
 end)
 
 function FokusEra_UpdateLockIconColor()
@@ -145,15 +203,22 @@ saveLoader:RegisterEvent("PLAYER_LOGIN")
 saveLoader:SetScript("OnEvent", function(self, event)
     if FokusEra_SavedLockState ~= nil then FokusEraNS.FokusEra_IsLocked = FokusEra_SavedLockState
     else FokusEra_SavedLockState = false end
-    
-    if FokusEra_OffsetX == nil then FokusEra_OffsetX = 4 end
-    if FokusEra_OffsetY == nil then FokusEra_OffsetY = 0 end 
     if FokusEra_Width == nil then FokusEra_Width = 210 end 
     
     FokusFrame:SetWidth(FokusEra_Width) 
+    FokusFrame.resizeBtn:SetParent(FokusFrame)
     FokusEra_UpdateInternalWidths() 
-    
     FokusEra_UpdateLockIconColor() 
-    if ReanchorTargetFrame then ReanchorTargetFrame() end
+    
+    if FokusFrame.portrait and FokusFrame.portrait.SetUnit then
+        FokusFrame.portrait:SetUnit("player")
+        FokusFrame.portrait:SetCamera(0)
+        FokusFrame.portrait:SetPosition(0, 0, 0)
+    end
+    
+    if FokusShadowFrame then FokusShadowFrame:SetWidth(FokusEra_Width) end
+    if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
     saveLoader:UnregisterEvent("PLAYER_LOGIN")
 end)
+
+-- end fokusui.lua

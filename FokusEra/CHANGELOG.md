@@ -3,6 +3,16 @@
 All notable changes to the **FokusEra** addon architecture will be documented in this registry file.
 
 ---
+## — 2026-08-11 (version 1.4.0)
+
+### ✨ Added
+* Added support for setting focus on NPCs, bosses, and non-group players.
+* Added context-aware text header status icons for instant clickability verification.
+
+### 🛑 Removed
+* Removed legacy /fokusspell functionality.
+* Removed support for Patch 1.15.8.
+
 
 ## — 2026-07-18 (version 1.3.1)
 

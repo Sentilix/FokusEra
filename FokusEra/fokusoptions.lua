@@ -1,6 +1,7 @@
 -- Catch the shared addon namespace parameter from the WoW engine
 local addonName, FokusEraNS = ...
 
+-- Create the main canvas frame for Blizzard's Settings layout catalog
 local optionsFrame = CreateFrame("Frame", "FokusEraOptionsFrame", UIParent)
 optionsFrame.name = "FokusEra"
 
@@ -55,7 +56,6 @@ optionsFrame:SetScript("OnEvent", function(self, event, loadedAddon)
     
     if FokusEra_ShowBuffs == nil then FokusEra_ShowBuffs = true end
     if FokusEra_ShowDebuffs == nil then FokusEra_ShowDebuffs = true end
-    if FokusEra_ShowTargetAuras == nil then FokusEra_ShowTargetAuras = true end -- Default to active
     
     local title = self:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
@@ -65,14 +65,12 @@ optionsFrame:SetScript("OnEvent", function(self, event, loadedAddon)
     desc:SetPoint("TOPLEFT", 16, -40)
     desc:SetText("Configure the visibility vectors for the standalone focus frame setup without risking memory taint.")
     
+    -- FIX v1.4.0: Streamlined menu layout to hold exactly 2 clean checkboxes for the main focus frame.
     self.buffCB = CreateSecureCheckbox(self, "Show Focus Buffs", "Toggle the display grid for active beneficial buffs tracking under the focus frame.", -70, "FokusEra_ShowBuffs")
     self.debuffCB = CreateSecureCheckbox(self, "Show Focus Debuffs", "Toggle the display grid for harmful debuffs/status afflictions tracking under the focus frame.", -105, "FokusEra_ShowDebuffs")
-    -- NEW Checkbox for Focus Target frame
-    self.targetCB = CreateSecureCheckbox(self, "Show Focus Target Auras", "Toggle the complete display grid (Both Buffs and Debuffs combined) under the Focus Target frame.", -140, "FokusEra_ShowTargetAuras")
     
     self.buffCB.UpdateState()
     self.debuffCB.UpdateState()
-    self.targetCB.UpdateState()
     
     if Settings and Settings.RegisterCanvasLayoutCategory then
         local category = Settings.RegisterCanvasLayoutCategory(self, "FokusEra")
@@ -83,3 +81,5 @@ optionsFrame:SetScript("OnEvent", function(self, event, loadedAddon)
     
     self:UnregisterEvent("ADDON_LOADED")
 end)
+
+-- end fokusoptions.lua
