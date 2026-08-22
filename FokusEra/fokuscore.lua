@@ -315,4 +315,20 @@ groupCheckFrame:SetScript("OnEvent", function(self, event)
     end
 end)
 
+-------------------------------------------------------------------------------
+-- FIX v1.4.1: EVENT-DRIVEN AURA REFRESH ENGINE (UNIT_AURA)
+-- Listens natively to Blizzard's aura delta event, completely avoiding heavy 
+-- OnUpdate polling cycles and executing updates ONLY when an aura actively changes!
+-------------------------------------------------------------------------------
+local auraEventFrame = CreateFrame("Frame")
+auraEventFrame:RegisterEvent("UNIT_AURA")
+auraEventFrame:SetScript("OnEvent", function(self, event, unitToken)
+    -- Verify that the aura update belongs to our current active friendly player focus
+    if FokusEraNS.FokusEra_CT and unitToken == FokusEraNS.FokusEra_CT then
+        if FokusEraNS.FokusEra_RefreshAuras then 
+            FokusEraNS.FokusEra_RefreshAuras() 
+        end
+    end
+end)
+
 -- end fokuscore.lua

@@ -3,6 +3,15 @@
 All notable changes to the **FokusEra** addon architecture will be documented in this registry file.
 
 ---
+
+### 🚀 2026-08-19 (version 1.4.1)
+* Bugfix: Focus frames are now updating buffs in real-time via `UNIT_AURA`.
+* Bugfix: Target health bars now accurately dynamic-color via `UnitReaction`.
+* Bugfix: UI frames can now layout-drag smoothly in real-time out of combat.
+* Bugfix: Roster joins no longer drop your active group focus in raids.
+* Bugfix: Ghost frames and overlaps after `/reload` are now fully eliminated.
+
+
 ## — 2026-08-11 (version 1.4.0)
 
 ### ✨ Added
