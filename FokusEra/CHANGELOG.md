@@ -4,6 +4,12 @@ All notable changes to the **FokusEra** addon architecture will be documented in
 
 ---
 
+### 🚀 2026-08-19 (version 1.4.2)
+* Bugfix: Mana bar missing on Focus frame
+* Bugfix: Mana and HP bar missing on Focus Target frame
+* Bugfix: Target frame was not always correctly set to a Player frame
+
+
 ### 🚀 2026-08-19 (version 1.4.1)
 * Bugfix: Focus frames are now updating buffs in real-time via `UNIT_AURA`.
 * Bugfix: Target health bars now accurately dynamic-color via `UnitReaction`.

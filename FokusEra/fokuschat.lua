@@ -25,36 +25,60 @@ communicationFrame:SetScript("OnEvent", function(self, event, prefix, message, c
     end
 end)
 
--- 1. CONSOLE SYSTEM COMMAND: /fokus (SLUSE: Gruppe-scanner med fallback opsamling)
+-- 1. CONSOLE SYSTEM COMMAND: /fokus (PIPELINE: Secure Group Scanner with GUID Fallback)
 SLASH_FOKUS1 = "/fokus"
 SlashCmdList["FOKUS"] = function(msg)
-    if InCombatLockdown() then return end
-    if not UnitExists("target") then return end
+    if InCombatLockdown() then 
+        print("|cffff0000[FokusEra]|r Cannot modify focus structures during combat lockdown.")
+        return 
+    end
+    
+    -- Handle focus clearing if command is invoked without an active target
+    if not UnitExists("target") then 
+        if FokusEraNS.FokusEra_ClearGroupFocusLogic then
+            FokusEraNS.FokusEra_ClearGroupFocusLogic()
+        end
+        return 
+    end
     
     local targetGUID = UnitGUID("target")
     local foundToken = nil
 
-    -- DINE ORIGINALE SPILLE-REGLER: Vi scanner udelukkende dig selv og din gruppes enheder!
-    if IsInRaid() then
-        for i = 1, 40 do
-            local token = "raid" .. i
-            if UnitExists(token) and UnitGUID(token) == targetGUID then foundToken = token; break end
-        end
-    else
-        if UnitGUID("player") == targetGUID then foundToken = "player"
+    -- Priority 1: Check if the target is the player character
+    if UnitGUID("player") == targetGUID then
+        foundToken = "player"
+    end
+
+    -- Priority 2: Scan active group layout maps hierarchically
+    if not foundToken then
+        if IsInRaid() then
+            for i = 1, 40 do
+                local token = "raid" .. i
+                if UnitExists(token) and UnitGUID(token) == targetGUID then 
+                    foundToken = token
+                    break 
+                end
+            end
         else
+            -- Fix: Scans active party units safely. Player is already evaluated in Priority 1.
             for i = 1, 4 do
-                if UnitGUID("party"..i) == targetGUID then foundToken = "party"..i; break end
+                local token = "party" .. i
+                if UnitExists(token) and UnitGUID(token) == targetGUID then 
+                    foundToken = token
+                    break 
+                end
             end
         end
     end
 
-    -- SLUSE 1: Målet er fundet i din gruppe! Kør den sikre spiller-ramme med Clique support.
+    -- Core Execution Routing
     if foundToken then 
+        -- Route directly to secure UnitID pipeline (Enables full interactive click-to-cast support)
         FokusEraNS.FokusEra_SetGroupFocus(foundToken) 
     else
-        -- SLUSE 2 (Fallback): Målet faldt igennem (fremmed spiller eller NPC)! Send direkte til Boss-rammen!
-        FokusEraNS.FokusEra_SetGroupFocus("target_npc_override")
+        -- Fallback: Route to non-secure GUID pipeline (Tracks external units/NPCs via event loops)
+        -- Instantly passes the raw target token to lock onto the current entity
+        FokusEraNS.FokusEra_SetGroupFocus("target")
     end
 end
 

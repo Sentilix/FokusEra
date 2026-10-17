@@ -105,13 +105,14 @@ FokusTargetFrame.nameText:SetJustifyH("LEFT")
 FokusTargetFrame.hpBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
 FokusTargetFrame.hpBar:SetSize(114, 14)
 FokusTargetFrame.hpBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -18)
+-- Fix: Elevate sub-frame level execution to clip strictly above the backdrop canvas
+FokusTargetFrame.hpBar:SetFrameLevel(FokusTargetFrame:GetFrameLevel() + 2)
 
--- FIX v1.4.0: RESTORE CLASSIC TEXTURE BLUPRINT!
--- Replaced the flat WHITE8X8 override. Re-engages Blizzard's native 3D statusbar texture 
--- so the target layout meshes flawlessly with the player and NPC design frameworks.
+-- RESTORE CLASSIC TEXTURE BLUPRINT!
 FokusTargetFrame.hpBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 if FokusTargetFrame.hpBar:GetStatusBarTexture() then
-    FokusTargetFrame.hpBar:GetStatusBarTexture():SetDrawLayer("BORDER")
+    -- Fix: Change draw layer from BORDER to ARTWORK to clear background clipping
+    FokusTargetFrame.hpBar:GetStatusBarTexture():SetDrawLayer("ARTWORK")
 end
 FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Solid Healer Green birth color
 
@@ -119,11 +120,24 @@ FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Solid Healer Green birth 
 FokusTargetFrame.manaBar = CreateFrame("StatusBar", nil, FokusTargetFrame)
 FokusTargetFrame.manaBar:SetSize(114, 6)
 FokusTargetFrame.manaBar:SetPoint("TOPLEFT", FokusTargetFrame, "TOPLEFT", 8, -34)
+-- Fix: Elevate sub-frame level execution to clip strictly above the backdrop canvas
+FokusTargetFrame.manaBar:SetFrameLevel(FokusTargetFrame:GetFrameLevel() + 2)
+
 FokusTargetFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 if FokusTargetFrame.manaBar:GetStatusBarTexture() then
-    FokusTargetFrame.manaBar:GetStatusBarTexture():SetDrawLayer("BORDER")
+    -- Fix: Change draw layer from BORDER to ARTWORK to clear background clipping
+    FokusTargetFrame.manaBar:GetStatusBarTexture():SetDrawLayer("ARTWORK")
 end
 FokusTargetFrame.manaBar:SetStatusBarColor(0, 0, 1)
+
+-- Fix: Create the missing numeric health text string overlay
+FokusTargetFrame.hpText = FokusTargetFrame.hpBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
+FokusTargetFrame.hpText:SetPoint("CENTER", FokusTargetFrame.hpBar, "CENTER", 0, 0)
+
+-- Fix: Create the missing numeric power/mana text string overlay
+FokusTargetFrame.manaText = FokusTargetFrame.manaBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
+FokusTargetFrame.manaText:SetPoint("CENTER", FokusTargetFrame.manaBar, "CENTER", 0, 0)
+
 
 -- INTERACTIVE RESIZE BUTTON
 FokusTargetFrame.resizeBtn = CreateFrame("Button", nil, FokusTargetFrame.iconOverlay)
