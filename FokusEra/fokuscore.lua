@@ -1,12 +1,14 @@
 -- Catch the shared addon namespace parameter from the WoW engine
 local addonName, FokusEraNS = ...
 
--- Central Memory Tracker explicitly tracking our active states (PLAYER, NPC, NIL)
-FokusEraNS.CurrentFocusState = "NIL"
-
--- CREATE CORE BACKGROUND HEARTBEAT ENGINE FRAME
-local coreHeartbeat = CreateFrame("Frame")
+-- Initialize core heartbeat frame if not already created
+local coreHeartbeat = _G["FokusEraHeartbeatFrame"] or CreateFrame("Frame", "FokusEraHeartbeatFrame", UIParent)
 coreHeartbeat.elapsed = 0
+
+-- Ensure the current focus state tracking variable exists inside the namespace
+if FokusEraNS.CurrentFocusState == nil then
+    FokusEraNS.CurrentFocusState = "NIL"
+end
 
 -- MAIN MONITORING UPDATE LOOP (Ticking 10 times per second for clean CPU profiles)
 coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
@@ -19,23 +21,41 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
         local token = FokusEraNS.FokusEra_CT
         local targetToken = token .. "target"
 
-        -- Safety Guard: If focus unit layout data collapses unexpectedly, clear out
+        -- Force hide the non-secure NPC target overlay to clear visual pollution
+        if FokusTargetNPCFrame and FokusTargetNPCFrame:IsShown() and not InCombatLockdown() then
+            FokusTargetNPCFrame:Hide()
+        end
+
+        -- Safety Guard: If focus unit data collapses unexpectedly, clear out
         if not UnitExists(token) or UnitGUID(token) ~= FokusEraNS.FokusEra_CurrentGUID then
-            FokusEraNS.FokusEra_ClearGroupFocusLogic()
+            if FokusEraNS.FokusEra_ClearGroupFocusLogic then FokusEraNS.FokusEra_ClearGroupFocusLogic() end
             return
         end
 
-        local rawName = UnitName(token) or "Unknown"
-        local rawLevel = UnitLevel(token) or "??"
-        FokusFrame.nameText:SetText(rawName)
-        FokusFrame.levelText:SetText(rawLevel)
+        -- Main frame text data mapping
+        FokusFrame.nameText:SetText(UnitName(token) or "Unknown")
+        FokusFrame.levelText:SetText(UnitLevel(token) or "??")
         
-        -- Update main focus frame values smoothly
-        local currentHP = UnitHealth(token)
-        local maxHP = UnitHealthMax(token)
+        -- Health synchronization for the main frame
+        local currentHP, maxHP = UnitHealth(token), UnitHealthMax(token)
         FokusFrame.hpBar:SetMinMaxValues(0, maxHP)
         FokusFrame.hpBar:SetValue(currentHP)
         FokusFrame.hpText:SetText(currentHP .. " / " .. maxHP)
+        
+        -- NEW: Real-time power/mana synchronization for the main focus frame (Fixes the dead sandbox bar)
+        if FokusFrame.manaBar then
+            local currentMana = UnitPower(token) or 0
+            local maxMana = UnitPowerMax(token) or 100
+            if maxMana <= 0 then maxMana = 100 end -- Prevent division by zero texture freeze
+            
+            FokusFrame.manaBar:SetMinMaxValues(0, maxMana)
+            FokusFrame.manaBar:SetValue(currentMana)
+            
+            -- If you create a text string for the main frame mana later, this updates it safely
+            if FokusFrame.manaText then
+                FokusFrame.manaText:SetText(currentMana .. " / " .. maxMana)
+            end
+        end
         
         -- Main player frame 3D portrait cache guard
         local currentFocusGUID = UnitGUID(token)
@@ -44,59 +64,95 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
             if FokusFrame.portrait and FokusFrame.portrait.SetUnit then
                 FokusFrame.portrait:SetUnit(token)
                 FokusFrame.portrait:SetCamera(0)
-                FokusFrame.portrait:SetPosition(0, 0, 0)
             end
         end
 
-        -- Handle target-of-focus frame rendering logic smoothly
+        -- Consolidated target-of-focus tracking module
         if UnitExists(targetToken) then
-            local fallbackToken = targetToken
             local targetGUID = UnitGUID(targetToken)
-            
-            if not targetGUID and UnitIsUnit(token, "target") then
-                targetGUID = UnitGUID(token)
-                fallbackToken = token
-            end
 
-            if FokusTargetFrame and not FokusTargetFrame:IsShown() then
+            -- Handle frame visibility safely outside combat lockdown
+            if FokusTargetFrame and not FokusTargetFrame:IsShown() and not InCombatLockdown() then
                 FokusTargetFrame.lastRenderedTargetGUID = nil
+                FokusTargetFrame:Show()
             end
 
-            -- Optimization block: Only refresh textures and strings if the target entity actually changed
+            -- Identity cache check: Refresh static strings and portrait layouts
             if targetGUID and targetGUID ~= FokusTargetFrame.lastRenderedTargetGUID then
                 FokusTargetFrame.lastRenderedTargetGUID = targetGUID
-                
-                local targetName = UnitName(fallbackToken) or "Target"
-                FokusTargetFrame.nameText:SetText(targetName)
+                FokusTargetFrame.nameText:SetText(UnitName(targetToken) or "Target")
                 
                 if FokusTargetFrame.portrait and FokusTargetFrame.portrait.SetUnit then
-                    FokusTargetFrame.portrait:SetUnit(fallbackToken)
+                    FokusTargetFrame.portrait:SetUnit(targetToken)
                     FokusTargetFrame.portrait:SetCamera(0)
-                    FokusTargetFrame.portrait:SetPosition(0, 0, 0)
                 end
-
-                if not InCombatLockdown() then FokusTargetFrame:Show() end
             end
+
+            -- Live Status Bar Taxonomical Coloring
+            if FokusTargetFrame and FokusTargetFrame.hpBar then
+                if UnitIsPlayer(targetToken) then
+                    FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Green
+                elseif UnitReaction(targetToken, "player") >= 5 then
+                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0.8, 0) -- Yellow
+                else
+                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0, 0) -- Red
+                end
+            end -- Note: We close the coloring block explicitly here to un-nest the data mapping cleanly
+                
+            -- CORE FIX FOR ERA API LIMITATION: Resolve exact source for live data values
+            local dataSourceToken = targetToken
+            if targetGUID then
+                if targetGUID == UnitGUID("player") then
+                    dataSourceToken = "player"
+                elseif targetGUID == UnitGUID("target") then
+                    dataSourceToken = "target"
+                elseif targetGUID == UnitGUID("mouseover") then
+                    dataSourceToken = "mouseover"
+                else
+                    for i = 1, 40 do
+                        if UnitGUID("raid" .. i) == targetGUID then dataSourceToken = "raid" .. i; break
+                        elseif UnitGUID("party" .. i) == targetGUID then dataSourceToken = "party" .. i; break
+                        elseif UnitGUID("nameplate" .. i) == targetGUID then dataSourceToken = "nameplate" .. i; break end
+                    end
+                end
+            end
+
+            -- Live execution with strict fallback boundaries to prevent 0-max engine locks
+            local tCurrentHP = UnitHealth(dataSourceToken) or 0
+            local tMaxHP = UnitHealthMax(dataSourceToken) or 100
+            if tMaxHP <= 0 then tMaxHP = 100 end -- Prevent division by zero / 100% texture freeze
 
             if FokusTargetFrame and FokusTargetFrame.hpBar then
-                if UnitIsPlayer(fallbackToken) then
-                    FokusTargetFrame.hpBar:SetStatusBarColor(0, 0.8, 0) -- Solid Healer Green
-                elseif UnitReaction(fallbackToken, "player") >= 5 then
-                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0.8, 0) -- Yellow for friendly NPCs
-                else
-                    FokusTargetFrame.hpBar:SetStatusBarColor(0.8, 0, 0) -- Red for nonfriendly NPCs                    
+                FokusTargetFrame.hpBar:SetMinMaxValues(0, tMaxHP)
+                FokusTargetFrame.hpBar:SetValue(tCurrentHP)
+                
+                local hpString = FokusTargetFrame.hpText or _G["FokusTargetFrameHPText"]
+                if hpString then
+                    hpString:SetText(tCurrentHP .. " / " .. tMaxHP)
                 end
             end
-            
-            -- Continuous live health updates for the target of focus
-            local tCurrentHP = UnitHealth(fallbackToken)
-            local tMaxHP = UnitHealthMax(fallbackToken)
-            FokusTargetFrame.hpBar:SetMinMaxValues(0, tMaxHP)
-            FokusTargetFrame.hpBar:SetValue(tCurrentHP)
-        else
-            -- Target does not exist (Escape pressed or cleared)
-            FokusTargetFrame.lastRenderedTargetGUID = nil
-            if not InCombatLockdown() then FokusTargetFrame:Hide() end
+
+            -- Live power/mana execution with strict fallback boundaries
+            if FokusTargetFrame and FokusTargetFrame.manaBar then
+                local tCurrentMana = UnitPower(dataSourceToken) or 0
+                local tMaxMana = UnitPowerMax(dataSourceToken) or 100
+                if tMaxMana <= 0 then tMaxMana = 100 end
+
+                FokusTargetFrame.manaBar:SetMinMaxValues(0, tMaxMana)
+                FokusTargetFrame.manaBar:SetValue(tCurrentMana)
+                
+                local manaString = FokusTargetFrame.manaText or _G["FokusTargetFrameManaText"]
+                if manaString then
+                    manaString:SetText(tCurrentMana .. " / " .. tMaxMana)
+                end
+            end
+        else -- This else matches the "if UnitExists(targetToken) then" way up in the hierarchy
+            if FokusTargetFrame then
+                FokusTargetFrame.lastRenderedTargetGUID = nil
+                if not InCombatLockdown() and FokusTargetFrame:IsShown() then 
+                    FokusTargetFrame:Hide() 
+                end
+            end
         end
 
     -- 2. COMBAT NPC / BOSS MONITORING PIPELINE
@@ -104,154 +160,157 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
         local rawGUID = FokusEraNS.FokusEra_NPCGUID
         local matchedToken = nil
 
-        -- Scan raid environments to track down an active token match for the boss GUID
         if UnitGUID("target") == rawGUID then matchedToken = "target"
         elseif UnitGUID("mouseover") == rawGUID then matchedToken = "mouseover"
         else
             for i = 1, 40 do
-                if UnitGUID("raid" .. i .. "target") == rawGUID then
-                    matchedToken = "raid" .. i .. "target"
-                    break
-                elseif UnitGUID("party" .. i .. "target") == rawGUID then
-                    matchedToken = "party" .. i .. "target"
-                    break
-                end
+                if UnitGUID("raid" .. i .. "target") == rawGUID then matchedToken = "raid" .. i .. "target"; break
+                elseif UnitGUID("party" .. i .. "target") == rawGUID then matchedToken = "party" .. i .. "target"; break end
             end
         end
 
-        -- If an active token window is locked in, refresh real-time health data (GREEN STATE)
         if matchedToken then
-            local currentHP = UnitHealth(matchedToken)
-            local maxHP = UnitHealthMax(matchedToken)
-            
+            local currentHP, maxGUIDHP = UnitHealth(matchedToken), UnitHealthMax(matchedToken)
             FokusNPCFrame.hpBar:SetStatusBarColor(0, 0.8, 0)
-            FokusNPCFrame.hpBar:SetMinMaxValues(0, maxHP)
+            FokusNPCFrame.hpBar:SetMinMaxValues(0, maxGUIDHP)
             FokusNPCFrame.hpBar:SetValue(currentHP)
-            FokusNPCFrame.hpText:SetText(currentHP .. " / " .. maxHP)
+            FokusNPCFrame.hpText:SetText(currentHP .. " / " .. maxGUIDHP)
             FokusNPCFrame.nameText:SetText(UnitName(matchedToken) or "Unknown NPC")
             
-            FokusNPCFrame.lastKnownHP = currentHP
-            FokusNPCFrame.lastKnownMaxHP = maxHP
-
-            -- Prevent constant 3D model resets on the NPC frame by verifying identity
             if FokusNPCFrame.lastRenderedNPCGUID ~= rawGUID then
                 FokusNPCFrame.lastRenderedNPCGUID = rawGUID
                 if FokusNPCFrame.portrait and FokusNPCFrame.portrait.SetUnit then
                     FokusNPCFrame.portrait:SetUnit(matchedToken)
                     FokusNPCFrame.portrait:SetCamera(0)
-                    FokusNPCFrame.portrait:SetPosition(0, 0, 0)
                 end
             end
 
-            -- Track boss target changes dynamically
             local bossTargetToken = matchedToken .. "target"
             if UnitExists(bossTargetToken) then
                 local bTargetGUID = UnitGUID(bossTargetToken)
                 if bTargetGUID ~= FokusTargetNPCFrame.lastRenderedTargetGUID then
                     FokusTargetNPCFrame.lastRenderedTargetGUID = bTargetGUID
                     FokusTargetNPCFrame.nameText:SetText(UnitName(bossTargetToken) or "Target")
-                    FokusTargetNPCFrame:Show()
+                    if not InCombatLockdown() then FokusTargetNPCFrame:Show() end
                 end
                 FokusTargetNPCFrame.hpBar:SetMinMaxValues(0, UnitHealthMax(bossTargetToken))
                 FokusTargetNPCFrame.hpBar:SetValue(UnitHealth(bossTargetToken))
             else
                 FokusTargetNPCFrame.lastRenderedTargetGUID = nil
-                FokusTargetNPCFrame:Hide()
+                if not InCombatLockdown() then FokusTargetNPCFrame:Hide() end
             end
         else
-            -- Signal temporarily drop out of group sight range (YELLOW CACHE STATE)
-            FokusNPCFrame.hpBar:SetStatusBarColor(0.8, 0.8, 0) -- Warning Yellow cache alert
+            FokusNPCFrame.hpBar:SetStatusBarColor(0.8, 0.8, 0) 
             FokusNPCFrame.lastRenderedNPCGUID = nil 
-            FokusTargetNPCFrame:Hide()
+            if FokusTargetNPCFrame and not InCombatLockdown() then FokusTargetNPCFrame:Hide() end
         end
     end
 end)
 
--- CORE DATA ASSIGNMENT (Shared into Namespace array table)
+-- CORE DATA ASSIGNMENT (Pipeline Routing for Secure UnitID vs Non-Secure GUID)
 function FokusEraNS.FokusEra_SetGroupFocus(unitToken)
-    if InCombatLockdown() then return end
-    if unitToken and FokusFrame and FokusShadowFrame then
-        local actualToken = unitToken
-        local isForcedNPC = false
-        if unitToken == "target_npc_override" then
-            actualToken = "target"
-            isForcedNPC = true
-        end
-
-        local rawGUID = UnitGUID(actualToken) or "0x0"
-        local rawName = UnitName(actualToken) or "Unknown Entity"        
-        FokusEraNS.FokusEra_CurrentGUID = rawGUID
-        FokusEraNS.FokusEra_CurrentName = rawName
-        
-        local nextState = (UnitIsPlayer(actualToken) and not isForcedNPC) and "PLAYER" or "NPC"
-        local previousState = FokusEraNS.CurrentFocusState
-        
-        if nextState == "PLAYER" then
-            FokusEraNS.FokusEra_CT = actualToken
-            FokusEraNS.FokusEra_NPCGUID = nil 
-            
-            FokusFrame.unit = actualToken
-            FokusFrame:SetAttribute("unit", actualToken)
-            FokusFrame:SetAttribute("*unit", actualToken)
-            
-            if FokusTargetFrame then
-                FokusTargetFrame.unit = actualToken .. "target"
-                FokusTargetFrame:SetAttribute("unit", actualToken .. "target")
-                FokusTargetFrame:SetAttribute("*unit", actualToken .. "target")
-            end
-            print("|cff00ff00[FokusEra]|r Friendly Player Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
-            
-            if previousState == "NIL" or previousState == "NPC" then
-                if previousState == "NPC" then FokusNPCFrame:Hide(); FokusTargetNPCFrame:Hide() end
-                
-                if not InCombatLockdown() then
-                    FokusFrame:ClearAllPoints()
-                    local shadowLeft = FokusShadowFrame:GetLeft()
-                    local shadowBottom = FokusShadowFrame:GetBottom()
-                    if shadowLeft and shadowBottom then
-                        FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, shadowBottom)
-                    else
-                        FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
-                    end
-                end
-            end
-            
-            FokusFrame:Show()
-            if FokusTargetFrame then FokusTargetFrame:Show() end
-            FokusNPCFrame:Hide(); FokusTargetNPCFrame:Hide()
-            
-        else
-            -- NEXT STATE IS NPC
-            FokusEraNS.FokusEra_CT = nil
-            FokusEraNS.FokusEra_NPCGUID = rawGUID
-            
-            FokusFrame.unit = nil
-            FokusFrame:SetAttribute("unit", nil); FokusFrame:SetAttribute("*unit", nil)
-            print("|cff00ff00[FokusEra]|r Combat NPC/Boss Focus set to: " .. FokusEraNS.FokusEra_CurrentName)
-            
-            if not InCombatLockdown() then
-                FokusFrame:ClearAllPoints()
-                local shadowLeft = FokusShadowFrame:GetLeft()
-                if shadowLeft then
-                    FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, -10000)
-                else
-                    FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -10000)
-                end
-                if FokusEraTargetFrame then FokusEraTargetFrame:Hide() end
-            end
-            
-            FokusFrame:Show() 
-            FokusNPCFrame:Show()
-            if FokusTargetNPCFrame then FokusTargetNPCFrame:Hide() end
-            if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
-            FokusTargetFrame:Hide()
-        end
-        
-        FokusEraNS.CurrentFocusState = nextState 
-        FokusFrame.lastRenderedGUID = nil
-        FokusTargetFrame.lastRenderedTargetGUID = nil
-        if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
+    if InCombatLockdown() then 
+        print("|cffff0000[FokusEra]|r Cannot assign focus templates while in combat lockdown.")
+        return 
     end
+    
+    if not (unitToken and FokusFrame and FokusShadowFrame) then return end
+
+    local actualToken = unitToken
+    local rawGUID = UnitGUID(actualToken) or "0x0"
+    local rawName = UnitName(actualToken) or "Unknown Entity"        
+    
+    FokusEraNS.FokusEra_CurrentGUID = rawGUID
+    FokusEraNS.FokusEra_CurrentName = rawName
+    
+    -- Evaluate target taxonomy: UnitID mode triggers ONLY for stable group tokens
+    local isStableGroupUnit = (actualToken ~= "target" and actualToken ~= "mouseover")
+    local nextState = (UnitIsPlayer(actualToken) and isStableGroupUnit) and "PLAYER" or "NPC"
+    local previousState = FokusEraNS.CurrentFocusState
+    
+    if nextState == "PLAYER" then
+        -- 1. SECURE INTERACTIVE UNITID FRAME CONFIGURATION
+        FokusEraNS.FokusEra_CT = actualToken
+        FokusEraNS.FokusEra_NPCGUID = nil 
+        
+        -- Bind secure attributes to the main focus template for execution (Clique support)
+        FokusFrame.unit = actualToken
+        FokusFrame:SetAttribute("unit", actualToken)
+        FokusFrame:SetAttribute("*unit", actualToken)
+        
+        -- Mirror configuration down to the secure target-of-focus template
+        if FokusTargetFrame then
+            local targetToken = actualToken .. "target"
+            FokusTargetFrame.unit = targetToken
+            FokusTargetFrame:SetAttribute("unit", targetToken)
+            FokusTargetFrame:SetAttribute("*unit", targetToken)
+        end
+        
+        print("|cff00ff00[FokusEra]|r Friendly Player Focus securely mapped to UnitID: " .. actualToken .. " (" .. rawName .. ")")
+        
+        -- Handle visual layout positioning and transition animations out of combat
+        if previousState == "NIL" or previousState == "NPC" then
+            if previousState == "NPC" then 
+                if FokusNPCFrame then FokusNPCFrame:Hide() end
+                if FokusTargetNPCFrame then FokusTargetNPCFrame:Hide() end
+            end
+            
+            FokusFrame:ClearAllPoints()
+            local shadowLeft = FokusShadowFrame:GetLeft()
+            local shadowBottom = FokusShadowFrame:GetBottom()
+            if shadowLeft and shadowBottom then
+                FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, shadowBottom)
+            else
+                FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -150)
+            end
+        end
+        
+        FokusFrame:Show()
+        if FokusTargetFrame then FokusTargetFrame:Show() end
+        if FokusNPCFrame then FokusNPCFrame:Hide() end
+        if FokusTargetNPCFrame then FokusTargetNPCFrame:Hide() end
+        
+    else
+        -- 2. NON-SECURE GUID EVENT TRACKING FRAME CONFIGURATION
+        FokusEraNS.FokusEra_CT = nil
+        FokusEraNS.FokusEra_NPCGUID = rawGUID
+        
+        -- Detach secure unit engine maps to prevent illegal proxy casting
+        FokusFrame.unit = nil
+        FokusFrame:SetAttribute("unit", nil)
+        FokusFrame:SetAttribute("*unit", nil)
+        
+        if FokusTargetFrame then
+            FokusTargetFrame.unit = nil
+            FokusTargetFrame:SetAttribute("unit", nil)
+            FokusTargetFrame:SetAttribute("*unit", nil)
+        end
+        
+        print("|cff00ff00[FokusEra]|r External Entity Focus bound to GUID Tracker: " .. rawGUID)
+        
+        -- Reposition the secure interactive anchor way off-screen to clear visual space securely
+        FokusFrame:ClearAllPoints()
+        local shadowLeft = FokusShadowFrame:GetLeft()
+        if shadowLeft then
+            FokusFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", shadowLeft, -10000)
+        else
+            FokusFrame:SetPoint("CENTER", UIParent, "CENTER", -65, -10000)
+        end
+        
+        -- Structural visibility toggles for the non-secure UI overlay modules
+        if FokusFrame then FokusFrame:Show() end 
+        if FokusNPCFrame then FokusNPCFrame:Show() end
+        if FokusTargetNPCFrame then FokusTargetNPCFrame:Hide() end
+        if FokusTargetFrame then FokusTargetFrame:Hide() end
+        if FokusEraTargetFrame then FokusEraTargetFrame:Hide() end
+        
+        if FokusEra_AlignNPCLayouts then FokusEra_AlignNPCLayouts() end
+    end
+    
+    FokusEraNS.CurrentFocusState = nextState 
+    FokusFrame.lastRenderedGUID = nil
+    if FokusTargetFrame then FokusTargetFrame.lastRenderedTargetGUID = nil end
+    if FokusEraNS.FokusEra_RefreshAuras then FokusEraNS.FokusEra_RefreshAuras() end
 end
 
 -- DATA DE-ALLOCATION MANAGEMENT ROUTINE (Shared into Namespace array table)

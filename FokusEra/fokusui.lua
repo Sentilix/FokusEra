@@ -137,6 +137,17 @@ FokusFrame.manaBar:SetPoint("TOPLEFT", FokusFrame.hpBar, "BOTTOMLEFT", 0, -2)
 FokusFrame.manaBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
 FokusFrame.manaBar:SetStatusBarColor(0, 0, 1)
 
+-- Fix 1: Elevate sub-frame level execution to clip strictly above the backdrop canvas
+FokusFrame.manaBar:SetFrameLevel(FokusFrame:GetFrameLevel() + 2)
+if FokusFrame.manaBar:GetStatusBarTexture() then
+    -- Fix 2: Change draw layer to ARTWORK to clear background clipping
+    FokusFrame.manaBar:GetStatusBarTexture():SetDrawLayer("ARTWORK")
+end
+
+-- Fix 3: Create the missing numeric power/mana text string overlay for the main frame
+FokusFrame.manaText = FokusFrame.manaBar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
+FokusFrame.manaText:SetPoint("CENTER", FokusFrame.manaBar, "CENTER", 0, 0)
+
 ClickCastFrames = ClickCastFrames or {}
 ClickCastFrames[FokusFrame] = true
 
