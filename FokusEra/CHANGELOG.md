@@ -4,6 +4,10 @@ All notable changes to the **FokusEra** addon architecture will be documented in
 
 ---
 
+### 🚀 2026-10-20 (version 1.4.3)
+* Update: Power bar is now Blue for Mana, Red for Rage, and Yellow for Energy.
+
+
 ### 🚀 2026-10-17 (version 1.4.2)
 * Bugfix: Mana bar missing on Focus frame
 * Bugfix: Mana and HP bar missing on Focus Target frame

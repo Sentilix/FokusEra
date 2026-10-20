@@ -10,6 +10,13 @@ if FokusEraNS.CurrentFocusState == nil then
     FokusEraNS.CurrentFocusState = "NIL"
 end
 
+-- Global or local namespace definition for Power Type Colors (Classic Era fallback)
+local POWER_TYPE_COLORS = {
+    [0] = { r = 0.0, g = 0.0, b = 1.0 }, -- Mana (Blue)
+    [1] = { r = 1.0, g = 0.0, b = 0.0 }, -- Rage (Red)
+    [3] = { r = 1.0, g = 1.0, b = 0.0 }, -- Energy (Yellow)
+}
+
 -- MAIN MONITORING UPDATE LOOP (Ticking 10 times per second for clean CPU profiles)
 coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
     self.elapsed = self.elapsed + elapsed
@@ -42,16 +49,20 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
         FokusFrame.hpBar:SetValue(currentHP)
         FokusFrame.hpText:SetText(currentHP .. " / " .. maxHP)
         
-        -- NEW: Real-time power/mana synchronization for the main focus frame (Fixes the dead sandbox bar)
+        -- Mana/Power synchronization for the main frame with dynamic type coloring
         if FokusFrame.manaBar then
             local currentMana = UnitPower(token) or 0
             local maxMana = UnitPowerMax(token) or 100
-            if maxMana <= 0 then maxMana = 100 end -- Prevent division by zero texture freeze
+            if maxMana <= 0 then maxMana = 100 end
             
+            -- Fetch the native power type token index (0: Mana, 1: Rage, 3: Energy)
+            local powerType, powerToken = UnitPowerType(token)
+            local color = POWER_TYPE_COLORS[powerType] or { r = 0.0, g = 0.5, b = 1.0 } -- Fallback to light blue
+            
+            FokusFrame.manaBar:SetStatusBarColor(color.r, color.g, color.b)
             FokusFrame.manaBar:SetMinMaxValues(0, maxMana)
             FokusFrame.manaBar:SetValue(currentMana)
             
-            -- If you create a text string for the main frame mana later, this updates it safely
             if FokusFrame.manaText then
                 FokusFrame.manaText:SetText(currentMana .. " / " .. maxMana)
             end
@@ -132,12 +143,16 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
                 end
             end
 
-            -- Live power/mana execution with strict fallback boundaries
+            -- Live power/mana execution with strict fallback boundaries and dynamic type coloring
             if FokusTargetFrame and FokusTargetFrame.manaBar then
                 local tCurrentMana = UnitPower(dataSourceToken) or 0
                 local tMaxMana = UnitPowerMax(dataSourceToken) or 100
                 if tMaxMana <= 0 then tMaxMana = 100 end
 
+                local tPowerType = UnitPowerType(dataSourceToken)
+                local tColor = POWER_TYPE_COLORS[tPowerType] or { r = 0.0, g = 0.5, b = 1.0 }
+
+                FokusTargetFrame.manaBar:SetStatusBarColor(tColor.r, tColor.g, tColor.b)
                 FokusTargetFrame.manaBar:SetMinMaxValues(0, tMaxMana)
                 FokusTargetFrame.manaBar:SetValue(tCurrentMana)
                 
@@ -146,6 +161,7 @@ coreHeartbeat:SetScript("OnUpdate", function(self, elapsed)
                     manaString:SetText(tCurrentMana .. " / " .. tMaxMana)
                 end
             end
+
         else -- This else matches the "if UnitExists(targetToken) then" way up in the hierarchy
             if FokusTargetFrame then
                 FokusTargetFrame.lastRenderedTargetGUID = nil
